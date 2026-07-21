@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Registar Utilizador</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="container" style="max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    <h2 style="color: #d9534f; text-align: center; margin-bottom: 20px;">Registar Novo Utilizador</h2>
+
+    <form th:action="@{/utilizadores}" th:object="${utilizador}" method="post">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Nome Completo:</label>
+            <input type="text" th:field="*{nomeCompleto}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Email:</label>
+            <input type="email" th:field="*{email}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Palavra-passe:</label>
+            <input type="password" th:field="*{password}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Função:</label>
+            <select th:field="*{funcao}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                <option value="" disabled selected>Selecione a função</option>
+                <option value="Garçom">Garçom</option>
+                <option value="Gerente">Gerente</option>
+                <option value="Cozinheiro">Cozinheiro</option>
+                <option value="Administrador">Administrador</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" style="flex: 1; padding: 12px; background-color: #d9534f; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Guardar</button>
+            <a th:href="@{/utilizadores}" style="flex: 1; text-align: center; padding: 12px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

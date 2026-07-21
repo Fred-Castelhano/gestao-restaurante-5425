@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestão de Restaurante - Estado das Mesas</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Restaurante - Gestão de Mesas</h1>
+    <table>
+        <thead>
+        <tr>
+            <th>Número da Mesa</th>
+            <th>Estado Atual</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="mesa : ${mesas}">
+            <td th:text="${mesa.idMesa}">1</td>
+            <td>
+                    <span class="badge"
+                          th:text="${mesa.estado}"
+                          th:classappend="${mesa.estado == 'Livre' ? ' badge-livre' : ' badge-ocupado'}">
+                          Livre
+                    </span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
