@@ -1,3 +1,4 @@
+/* Configurações Gerais */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f6f9;
@@ -5,49 +6,246 @@ body {
     margin: 0;
     padding: 40px;
 }
-.container {
-    max-width: 800px;
+
+.container, .reservas-container {
+    max-width: 1000px;
     margin: 0 auto;
     background: #fff;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
+
 h1 {
     color: #d9534f;
     text-align: center;
     margin-bottom: 25px;
 }
-table {
+
+/* 1. PLANTA DO RESTAURANTE (Moldura exterior) */
+.mapa-container {
+    background-color: #fdfdfd;
+    border: 3px solid #333;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 40px;
+    position: relative;
+    min-height: 250px;
+}
+
+.grid-mesas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.mesa-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+    cursor: pointer;
+}
+
+.mesa-card:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+/* Formas das mesas */
+.mesa-redonda-pequena {
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+}
+
+.mesa-redonda-grande {
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+}
+
+.mesa-quadrada {
+    border-radius: 10px;
+    width: 105px;
+    height: 105px;
+}
+
+.mesa-retangular {
+    border-radius: 10px;
+    width: 85px;
+    height: 190px;
+}
+
+/* Cores dos Estados (Mapa e Tabela) */
+.card-disponivel, .badge-disponivel {
+    background-color: #28a745 !important; /* Verde */
+}
+
+.card-reservada, .badge-reservada {
+    background-color: #ffc107 !important; /* Amarelo */
+    color: #333 !important;
+}
+
+.card-ocupada, .badge-ocupada {
+    background-color: #dc3545 !important; /* Vermelho */
+}
+
+/* 2. TABELA TRADICIONAL */
+table, .tabela-cronograma {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
 }
+
 th, td {
-    padding: 14px 18px;
+    padding: 12px 18px;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
 }
+
 th {
-    background-color: #d9534f;
+    background-color: #343a40;
     color: white;
     text-transform: uppercase;
     font-size: 14px;
     letter-spacing: 0.5px;
 }
+
 tr:hover {
     background-color: #f9f9f9;
 }
+
 .badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.select-estado {
     padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    border-radius: 6px;
     font-weight: bold;
     color: white;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    text-align: center;
 }
-.badge-livre {
-    background-color: #5cb85c;
+
+.select-disponivel { background-color: #28a745; }
+.select-reservada { background-color: #ffc107; color: #333; }
+.select-ocupada { background-color: #dc3545; }
+
+/* Cartão do Formulário de Reservas */
+.form-card {
+    background: #fdfdfd;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
 }
-.badge-ocupado {
-    background-color: #d9534f;
+
+/* Mensagem de Erro */
+.alert-erro {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Formulário de Nova Reserva (Grid) */
+.reserva-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.reserva-form label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.reserva-form input,
+.reserva-form select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.form-submit {
+    grid-column: span 2;
+    text-align: right;
+}
+
+.btn-guardar {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-guardar:hover {
+    background-color: #218838;
+}
+
+/* Turnos de Hoje */
+.turnos-wrapper {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.turno-card {
+    flex: 1;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.turno-card ul {
+    padding-left: 20px;
+}
+
+.sem-reservas {
+    color: #777;
+    font-style: italic;
+}
+
+.tabela-vazia {
+    text-align: center;
+    color: #777;
+    padding: 15px;
+}
+
+/* Link de Voltar */
+.voltar-link {
+    margin-top: 30px;
+}
+
+.voltar-link a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.voltar-link a:hover {
+    text-decoration: underline;
 }

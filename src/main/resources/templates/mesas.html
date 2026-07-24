@@ -2,33 +2,75 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Gestão de Restaurante - Estado das Mesas</title>
+    <title>Gestão de Mesas</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
-<div class="container">
-    <h1>Restaurante - Gestão de Mesas</h1>
-    <table>
-        <thead>
-        <tr>
-            <th>Número da Mesa</th>
-            <th>Estado Atual</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="mesa : ${mesas}">
-            <td th:text="${mesa.idMesa}">1</td>
-            <td>
+<div class="container" style="max-width: 1000px; margin: 40px auto;">
+    <h1 style="text-align: center;">Restaurante - Gestão de Mesas</h1>
+
+    <!-- 1. MAPA VISUAL DE MESAS -->
+    <div class="mapa-container">
+        <h2>Mapa do Restaurante</h2>
+        <div class="grid-mesas">
+            <div th:each="mesa : ${mesas}"
+                 class="mesa-card"
+                 th:classappend="
+                (${mesa.capacidade == 2} ? ' mesa-quadrada' :
+                (${mesa.capacidade == 4} ? ' mesa-redonda-pequena' :
+                (${mesa.capacidade == 6} ? ' mesa-retangular' : ' mesa-redonda-grande'))) + ' ' +
+                (${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre'} ? 'card-disponivel' :
+                (${mesa.estado == 'RESERVADO' || mesa.estado == 'RESERVADA' || mesa.estado == 'Reservada'} ? 'card-reservada' : 'card-ocupada'))">
+
+                <span style="font-size: 1rem;">Mesa <span th:text="${mesa.numero}">1</span></span>
+                <span style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">
+                Lugares: <span th:text="${mesa.capacidade}">4</span>
+            </span>
+                <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;"
+                      th:text="${mesa.estado}">DISPONIVEL</span>
+            </div>
+        </div>
+    </div>
+
+    <hr style="margin: 40px 0; border: 0; border-top: 1px solid #ddd;">
+
+    <!-- 2. TABELA TRADICIONAL (Sem ID) -->
+    <div>
+        <h2>Lista de Mesas (Tabela)</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Número da Mesa</th>
+                <th>Capacidade</th>
+                <th>Estado Atual</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="mesa : ${mesas}">
+                <td th:text="${mesa.numero}">1</td>
+                <td th:text="${mesa.capacidade}">4</td>
+                <td>
                     <span class="badge"
                           th:text="${mesa.estado}"
-                          th:classappend="${mesa.estado == 'Livre' ? ' badge-livre' : ' badge-ocupado'}">
-                          Livre
+                          th:classappend="${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre' ? ' badge-disponivel' : (mesa.estado == 'RESERVADO' || mesa.estado == 'Reservada' ? ' badge-reservada' : ' badge-ocupada')}">
+                          DISPONIVEL
                     </span>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                </td>
+                <td>
+                    <form th:action="@{/mesas/atualizar-estado/{id}(id=${mesa.idMesa})}" method="post" style="display:inline;">
+                        <select name="estado" onchange="this.form.submit()" class="select-estado"
+                                th:classappend="${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre' ? ' select-disponivel' : (mesa.estado == 'RESERVADO' || mesa.estado == 'RESERVADA' || mesa.estado == 'Reservada' ? ' select-reservada' : ' select-ocupada')}">
+                            <option value="DISPONIVEL" th:selected="${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre'}">DISPONÍVEL</option>
+                            <option value="RESERVADA" th:selected="${mesa.estado == 'RESERVADO' || mesa.estado == 'RESERVADA' || mesa.estado == 'Reservada'}">RESERVADA</option>
+                            <option value="OCUPADA" th:selected="${mesa.estado == 'OCUPADA'}">OCUPADA</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 </body>
