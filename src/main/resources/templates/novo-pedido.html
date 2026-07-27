@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Criar Pedido</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="container container-novo-pedido">
+    <h1>Criar Pedido</h1>
+    <h3 class="subtitulo-mesa" th:text="'Mesa: ' + ${mesa.numero}">Mesa</h3>
+
+    <form th:action="@{/pedidos/guardar}" method="post" class="form-card">
+        <input type="hidden" name="idMesa" th:value="${mesa.idMesa}">
+
+        <p class="label-seccao">Selecione as quantidades para cada prato:</p>
+
+        <div class="lista-pratos-container">
+            <div th:each="prato : ${pratos}" class="prato-item-linha">
+                <div class="prato-info-detalhe">
+                    <span class="prato-nome" th:text="${prato.nome}">Prato</span>
+                    <span class="prato-preco-unitario" th:text="${prato.preco} + '€'">0€</span>
+                </div>
+
+                <div class="controlo-quantidade">
+                    <!-- Input de quantidade associado ao preço para cálculo automático -->
+                    <input type="number"
+                           name="quantidades[__${prato.idPrato}__]"
+                           value="0"
+                           min="0"
+                           max="20"
+                           class="input-quantidade"
+                           th:data-preco="${prato.preco}"
+                           oninput="calcularTotal()">
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(pratos)}" class="tabela-vazia">
+                Nenhum prato disponível no momento.
+            </div>
+        </div>
+
+        <!-- Resumo do Total -->
+        <div class="resumo-total-container">
+            <span>Total a Pagar:</span>
+            <span id="valorTotal" class="valor-total-destaque">0.00€</span>
+        </div>
+
+        <div class="form-submit">
+            <button type="submit" class="btn-guardar btn-enviar-pedido">
+                Enviar Pedido para a Cozinha
+            </button>
+        </div>
+    </form>
+
+    <div class="voltar-link">
+        <a th:href="@{/mesas}">← Voltar às Mesas</a>
+    </div>
+</div>
+
+<!-- Script simples para calcular o total em tempo real -->
+<script>
+    function calcularTotal() {
+        let total = 0;
+        const inputs = document.querySelectorAll('.input-quantidade');
+
+        inputs.forEach(input => {
+            const quantidade = parseInt(input.value) || 0;
+            const preco = parseFloat(input.getAttribute('data-preco')) || 0;
+            total += quantidade * preco;
+        });
+
+        document.getElementById('valorTotal').innerText = total.toFixed(2) + '€';
+    }
+</script>
+
+</body>
+</html>

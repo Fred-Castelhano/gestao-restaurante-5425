@@ -57,9 +57,18 @@
     <div class="turno-card">
       <h3>☀️ Almoço (12:00 - 15:30)</h3>
       <ul th:if="${not #lists.isEmpty(almocoHoje)}">
-        <li th:each="r : ${almocoHoje}">
-          <strong th:text="${r.horaReserva}">12:30</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
-          <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}" style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;" onclick="return confirm('Tens a certeza que pretendes cancelar esta reserva?');">❌ Cancelar</a>
+        <li th:each="r : ${almoçoHoje}">
+          <strong th:text="${r.horaReserva}">14:15</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
+
+          <!-- Botão de Confirmar Chegada -->
+          <a th:href="@{/reservas/chegada/{id}(id=${r.idReserva})}"
+             style="color: #28a745; margin-left: 10px; text-decoration: none; font-weight: bold;"
+             onclick="return confirm('Confirmar a chegada deste cliente e ocupar a mesa?');">✅ Chegada</a>
+
+          <!-- Botão de Cancelar -->
+          <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}"
+             style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;"
+             onclick="return confirm('Tem a certeza que quer cancelar esta reserva?');">❌ Cancelar</a>
         </li>
       </ul>
       <p th:if="${#lists.isEmpty(almocoHoje)}" class="sem-reservas">Sem reservas para o almoço de hoje.</p>
@@ -69,7 +78,17 @@
       <h3>🌙 Jantar (19:30 - 23:00)</h3>
       <ul th:if="${not #lists.isEmpty(jantarHoje)}">
         <li th:each="r : ${jantarHoje}">
-          <strong th:text="${r.horaReserva}">20:00</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">4</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
+          <strong th:text="${r.horaReserva}">20:30</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
+
+          <!-- Botão de Confirmar Chegada -->
+          <a th:href="@{/reservas/chegada/{id}(id=${r.idReserva})}"
+             style="color: #28a745; margin-left: 10px; text-decoration: none; font-weight: bold;"
+             onclick="return confirm('Confirmar a chegada deste cliente e ocupar a mesa?');">✅ Chegada</a>
+
+          <!-- Botão de Cancelar -->
+          <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}"
+             style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;"
+             onclick="return confirm('Tem a certeza que quer cancelar esta reserva?');">❌ Cancelar</a>
         </li>
       </ul>
       <p th:if="${#lists.isEmpty(jantarHoje)}" class="sem-reservas">Sem reservas para o jantar de hoje.</p>
@@ -99,7 +118,9 @@
       <td th:text="${r.numeroPessoas}">2</td>
       <td th:text="${r.mesa != null ? 'Mesa ' + r.mesa.numero : 'Sem mesa'}">Mesa</td>
       <td>
-        <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;" onclick="return confirm('Tens a certeza que pretendes cancelar esta reserva?');">Cancelar</a>
+        <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;"
+           onclick="return confirm('Tens a certeza que pretendes cancelar esta reserva?');">Cancelar
+        </a>
       </td>
     </tr>
     <tr th:if="${#lists.isEmpty(cronogramaFuturo)}">

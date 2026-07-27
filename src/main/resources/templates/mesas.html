@@ -7,8 +7,8 @@
 </head>
 <body>
 
-<div class="container" style="max-width: 1000px; margin: 40px auto;">
-    <h1 style="text-align: center;">Restaurante - Gestão de Mesas</h1>
+<div class="container">
+    <h1>Restaurante - Gestão de Mesas</h1>
 
     <!-- 1. MAPA VISUAL DE MESAS -->
     <div class="mapa-container">
@@ -20,22 +20,23 @@
                 (${mesa.capacidade == 2} ? ' mesa-quadrada' :
                 (${mesa.capacidade == 4} ? ' mesa-redonda-pequena' :
                 (${mesa.capacidade == 6} ? ' mesa-retangular' : ' mesa-redonda-grande'))) + ' ' +
-                (${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre'} ? 'card-disponivel' :
-                (${mesa.estado == 'RESERVADO' || mesa.estado == 'RESERVADA' || mesa.estado == 'Reservada'} ? 'card-reservada' : 'card-ocupada'))">
+                (${reservasPorMesa.containsKey(mesa.idMesa)} ? 'card-reservada' :
+                (${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'} ? 'card-ocupada' : 'card-disponivel'))">
 
                 <span style="font-size: 1rem;">Mesa <span th:text="${mesa.numero}">1</span></span>
                 <span style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">
-                Lugares: <span th:text="${mesa.capacidade}">4</span>
-            </span>
+                    Lugares: <span th:text="${mesa.capacidade}">4</span>
+                </span>
+
                 <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;"
-                      th:text="${mesa.estado}">DISPONIVEL</span>
+                      th:text="${reservasPorMesa.containsKey(mesa.idMesa) ? 'RESERVADO' : mesa.estado}">DISPONIVEL</span>
             </div>
         </div>
     </div>
 
     <hr style="margin: 40px 0; border: 0; border-top: 1px solid #ddd;">
 
-    <!-- 2. TABELA TRADICIONAL (Sem ID) -->
+    <!-- 2. TABELA TRADICIONAL -->
     <div>
         <h2>Lista de Mesas (Tabela)</h2>
         <table>
@@ -44,34 +45,71 @@
                 <th>Número da Mesa</th>
                 <th>Capacidade</th>
                 <th>Estado Atual</th>
+                <th style="text-align: right;">Ação</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="mesa : ${mesas}">
-                <td th:text="${mesa.numero}">1</td>
-                <td th:text="${mesa.capacidade}">4</td>
+                <!-- Número da Mesa -->
+                <td style="font-weight: 600;" th:text="'Mesa ' + ${mesa.numero}">1</td>
+
+                <!-- Capacidade -->
+                <td th:text="${mesa.capacidade} + ' Lugares'">4 Lugares</td>
+
+                <!-- Estado Atual / Reservas -->
                 <td>
-                    <span class="badge"
-                          th:text="${mesa.estado}"
-                          th:classappend="${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre' ? ' badge-disponivel' : (mesa.estado == 'RESERVADO' || mesa.estado == 'Reservada' ? ' badge-reservada' : ' badge-ocupada')}">
-                          DISPONIVEL
-                    </span>
+                    <!-- 1. Se estiver reservado -->
+                    <div th:if="${reservasPorMesa.containsKey(mesa.idMesa)}" style="display: inline-block;">
+                        <span class="badge badge-reservada">RESERVADO</span>
+                        <a href="#"
+                           class="btn-detalhes"
+                           th:data-cliente="${reservasPorMesa[mesa.idMesa].nomeCliente}"
+                           th:data-contacto="${reservasPorMesa[mesa.idMesa].contacto}"
+                           th:data-pessoas="${reservasPorMesa[mesa.idMesa].numeroPessoas}"
+                           th:data-data="${reservasPorMesa[mesa.idMesa].dataReserva}"
+                           th:data-hora="${reservasPorMesa[mesa.idMesa].horaReserva}"
+                           onclick="mostrarDetalhes(this); return false;"
+                           style="margin-left: 10px; font-size: 0.85rem; color: #007bff; text-decoration: none; font-weight: bold;">
+                            Ver Detalhes
+                        </a>
+                    </div>
+
+                    <!-- 2. Se não estiver reservado -->
+                    <div th:unless="${reservasPorMesa.containsKey(mesa.idMesa)}" style="display: inline-block;">
+                        <span th:if="${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'}"
+                              class="badge badge-ocupada" th:text="${mesa.estado}">OCUPADA</span>
+
+                        <span th:unless="${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'}"
+                              class="badge badge-disponivel" th:text="${mesa.estado}">DISPONIVEL</span>
+                    </div>
                 </td>
-                <td>
-                    <form th:action="@{/mesas/atualizar-estado/{id}(id=${mesa.idMesa})}" method="post" style="display:inline;">
-                        <select name="estado" onchange="this.form.submit()" class="select-estado"
-                                th:classappend="${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre' ? ' select-disponivel' : (mesa.estado == 'RESERVADO' || mesa.estado == 'RESERVADA' || mesa.estado == 'Reservada' ? ' select-reservada' : ' select-ocupada')}">
-                            <option value="DISPONIVEL" th:selected="${mesa.estado == 'DISPONIVEL' || mesa.estado == 'Livre'}">DISPONÍVEL</option>
-                            <option value="RESERVADA" th:selected="${mesa.estado == 'RESERVADO' || mesa.estado == 'RESERVADA' || mesa.estado == 'Reservada'}">RESERVADA</option>
-                            <option value="OCUPADA" th:selected="${mesa.estado == 'OCUPADA'}">OCUPADA</option>
-                        </select>
-                    </form>
+
+                <!-- Ação (Criar Pedido se Ocupada) -->
+                <td style="text-align: right;">
+                    <a th:if="${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'}"
+                       th:href="@{/pedidos/novo(idMesa=${mesa.idMesa})}"
+                       style="background-color: #0f766e; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+                        Criar Pedido
+                    </a>
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+    <!-- Script para lidar com o clique dos detalhes sem quebrar o HTML -->
+    <script>
+        function mostrarDetalhes(element) {
+            const cliente = element.getAttribute('data-cliente');
+            const contacto = element.getAttribute('data-contacto');
+            const pessoas = element.getAttribute('data-pessoas');
+            const data = element.getAttribute('data-data');
+            const hora = element.getAttribute('data-hora');
+
+            alert(`Detalhes da Reserva:\nCliente: ${cliente}\nContacto: ${contacto}\nPessoas: ${pessoas}\nData: ${data}\nHora: ${hora}`);
+        }
+    </script>
 
 </body>
 </html>

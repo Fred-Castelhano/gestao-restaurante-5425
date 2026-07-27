@@ -1,4 +1,4 @@
-package com._5.Gestao_Restaurante.repository;
+package com._5.Gestao_Restaurante.Repository;
 
 import com._5.Gestao_Restaurante.model.Reserva;
 import org.springframework.data.jpa.repository.JpaRepository;

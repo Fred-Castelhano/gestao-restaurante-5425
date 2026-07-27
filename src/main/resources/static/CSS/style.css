@@ -129,6 +129,7 @@ tr:hover {
     color: white;
     font-size: 0.85rem;
     font-weight: bold;
+    display: inline-block;
 }
 
 .select-estado {
@@ -248,4 +249,249 @@ tr:hover {
 
 .voltar-link a:hover {
     text-decoration: underline;
+}
+
+/* =========================================================
+   3. ESTILOS DO PAINEL DE PEDIDOS (KDS / COZINHA)
+   ========================================================= */
+
+.kds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.kds-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    flex: 1;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border-top: 4px solid #ccc;
+}
+
+.stat-espera { border-top-color: #d97706; }
+.stat-preparacao { border-top-color: #0284c7; }
+.stat-pronto { border-top-color: #16a34a; }
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.kds-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.kds-column {
+    background: #eef2f6;
+    border-radius: 8px;
+    padding: 15px;
+    min-height: 500px;
+}
+
+.kds-column h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.pedido-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-left: 5px solid #ccc;
+}
+
+.card-espera { border-left-color: #d97706; }
+.card-preparacao { border-left-color: #0284c7; }
+.card-pronto { border-left-color: #16a34a; }
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.pedido-tempo {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: normal;
+}
+
+.item-lista {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.item-lista li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.item-feito {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.btn-avancar {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.btn-espera { background-color: #0284c7; }
+.btn-preparacao { background-color: #16a34a; }
+.btn-pronto { background-color: #4b5563; }
+
+/* =========================================================
+   4. ESTILOS DA PÁGINA DE MENU
+   ========================================================= */
+
+.menu-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.btn-novo-prato {
+    background-color: #0f766e;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.menu-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.menu-stat-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.menu-stat-title {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-bottom: 5px;
+}
+
+.menu-stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #111827;
+}
+
+.badge-prato-disponivel {
+    background-color: #d1fae5;
+    color: #065f46;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-prato-indisponivel {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+/* =========================================================
+   5. ESTILOS DO CONTADOR DE QUANTIDADES E TOTAL DO PEDIDO
+   ========================================================= */
+
+.prato-info-detalhe {
+    display: flex;
+    flex-direction: column;
+}
+
+.prato-preco-unitario {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.controlo-quantidade {
+    display: flex;
+    align-items: center;
+}
+
+.input-quantidade {
+    width: 65px;
+    padding: 6px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    outline: none;
+}
+
+.input-quantidade:focus {
+    border-color: #0f766e;
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+}
+
+.resumo-total-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f3f4f6;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+}
+
+.valor-total-destaque {
+    color: #0f766e;
+    font-size: 1.4rem;
 }

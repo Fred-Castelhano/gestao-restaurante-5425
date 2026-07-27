@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão de Menu</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="container" style="max-width: 1100px;">
+
+  <!-- Cabeçalho com botão Novo Prato -->
+  <div class="menu-header-flex">
+    <div>
+      <h1 style="text-align: left; margin: 0; color: #111827;">Menu</h1>
+      <p style="margin: 5px 0 0 0; color: #6b7280;">Gestão dos pratos, categorias e disponibilidade.</p>
+    </div>
+    <a href="#" class="btn-novo-prato">+ Novo prato</a>
+  </div>
+
+  <!-- 4 Cartões de Estatísticas no Topo -->
+  <div class="menu-stats">
+    <div class="menu-stat-card">
+      <div class="menu-stat-title">Pratos ativos</div>
+      <div class="menu-stat-value" th:text="${totalAtivos}">0</div>
+    </div>
+    <div class="menu-stat-card">
+      <div class="menu-stat-title">Indisponíveis</div>
+      <div class="menu-stat-value" th:text="${totalIndisponiveis}">0</div>
+    </div>
+    <div class="menu-stat-card">
+      <div class="menu-stat-title">Categorias</div>
+      <div class="menu-stat-value" th:text="${totalCategorias}">0</div>
+    </div>
+    <div class="menu-stat-card">
+      <div class="menu-stat-title">Preço médio</div>
+      <div class="menu-stat-value" th:text="${precoMedio} + '€'">0,00€</div>
+    </div>
+  </div>
+
+  <!-- Tabela de Pratos -->
+  <div class="form-card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 20px 20px 10px 20px;">
+      <h3 style="margin: 0; color: #1f2937;">Lista de pratos</h3>
+      <p style="margin: 3px 0 0 0; font-size: 0.85rem; color: #6b7280;">Consulta e gestão dos itens do menu.</p>
+    </div>
+
+    <table>
+      <thead>
+      <tr>
+        <th>Prato</th>
+        <th>Categoria</th>
+        <th>Preço</th>
+        <th>Estado</th>
+        <th style="text-align: right;">Ação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="prato : ${pratos}">
+        <td style="font-weight: 600;" th:text="${prato.nome}">Nome do Prato</td>
+        <td style="color: #4b5563;" th:text="${prato.categoria}">Categoria</td>
+        <td style="font-weight: 600;" th:text="${prato.preco} + '€'">0,00€</td>
+        <td>
+          <span th:if="${prato.estado == 'Disponível'}" class="badge-prato-disponivel">Disponível</span>
+          <span th:unless="${prato.estado == 'Disponível'}" class="badge-prato-indisponivel">Indisponível</span>
+        </td>
+        <td style="text-align: right;">
+          <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Editar</a>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(pratos)}">
+        <td colspan="5" class="tabela-vazia">Ainda não existem pratos registados no menu.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>

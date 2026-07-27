@@ -3,7 +3,7 @@ package com._5.Gestao_Restaurante.Controller;
 import com._5.Gestao_Restaurante.model.Reserva;
 import com._5.Gestao_Restaurante.model.Mesa;
 import com._5.Gestao_Restaurante.Repository.MesaRepository;
-import com._5.Gestao_Restaurante.repository.ReservaRepository;
+import com._5.Gestao_Restaurante.Repository.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -44,7 +44,33 @@ public class ReservaController {
 
     @GetMapping("/reservas/cancelar/{id}")
     public String cancelarReserva(@PathVariable Integer id) {
+        // 1. Procurar a reserva antes de a apagar para sabermos qual era a mesa
+        Reserva reserva = reservaRepository.findById(id).orElse(null);
+
+        if (reserva != null && reserva.getMesa() != null) {
+            Mesa mesa = reserva.getMesa();
+
+            // 2. Libertar a mesa (ajusta o método ao nome que usas, ex: setEstado("DISPONIVEL"))
+            mesa.setEstado("DISPONIVEL");
+            mesaRepository.save(mesa);
+        }
         reservaRepository.deleteById(id);
+        return "redirect:/reservas";
+    }
+    @GetMapping("/reservas/chegada/{id}")
+    public String confirmarChegada(@PathVariable Integer id) {
+        Reserva reserva = reservaRepository.findById(id).orElse(null);
+
+        if (reserva != null) {
+            if (reserva.getMesa() != null) {
+                Mesa mesa = reserva.getMesa();
+                mesa.setEstado("OCUPADA");
+                mesaRepository.save(mesa);
+            }
+            // Apaga a reserva da lista ativa pois o cliente já chegou
+            reservaRepository.deleteById(id);
+        }
+
         return "redirect:/reservas";
     }
 
