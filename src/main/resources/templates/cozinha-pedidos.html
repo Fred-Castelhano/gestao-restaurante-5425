@@ -10,7 +10,7 @@
 <div class="kds-header">
   <div>
     <h1 style="margin: 0; color: #1e293b; text-align: left;">Pedidos - Cozinha</h1>
-    <p style="margin: 5px 0 0 0; color: #64748b;">Vista KDS com cartões por pedido e interatividade por item.</p>
+    <p style="margin: 5px 0 0 0; color: #64748b;">Vista KDS com cartões individuais por item.</p>
   </div>
   <a href="/pedidos/cozinha" style="background: #16a34a; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">Atualizar</a>
 </div>
@@ -38,31 +38,24 @@
   <div class="kds-column">
     <h3>Em espera <span th:text="${countEspera}">0</span></h3>
 
-    <div th:each="pedido : ${emEspera}" class="pedido-card card-espera">
+    <div th:each="item : ${emEspera}" class="pedido-card card-espera">
       <div class="pedido-header">
-        <span>Mesa <span th:text="${pedido.mesa != null ? pedido.mesa.numero : 'Balcão'}">1</span></span>
-        <span class="pedido-tempo" th:text="${#temporals.format(pedido.dataHora, 'HH:mm')}">12:15</span>
+        <span>Mesa <span th:text="${item.pedido != null && item.pedido.mesa != null ? item.pedido.mesa.numero : 'Balcão'}">1</span></span>
+        <span class="pedido-tempo" th:text="${item.pedido != null && item.pedido.dataHora != null ? #temporals.format(item.pedido.dataHora, 'HH:mm') : ''}">12:15</span>
       </div>
 
-      <ul class="item-lista">
-        <li th:each="item : ${pedido.itens}">
-          <form th:action="@{/pedidos/item/toggle/{id}(id=${item.idItem})}" method="post" style="display:inline;">
-            <input type="checkbox" th:checked="${item.estado == 'PREPARADO'}" th:onchange="this.form.submit()">
-          </form>
-          <span th:classappend="${item.estado == 'PREPARADO'} ? 'item-feito' : ''">
-            <span th:text="${item.quantidade}">1</span>x <span th:text="${item.nomeProduto}">Produto</span>
-          </span>
-          <small style="color: #e11d48;" th:if="${item.observacoes != null}" th:text="'(' + ${item.observacoes} + ')'"></small>
-        </li>
-      </ul>
+      <div style="padding: 12px 0; font-size: 16px; font-weight: bold; color: #1e293b;">
+        <span th:text="${item.quantidade}">1</span>x <span th:text="${item.nomeProduto}">Produto</span>
+      </div>
+      <small style="color: #e11d48; display: block; margin-bottom: 8px;" th:if="${item.observacoes != null}" th:text="'Obs: ' + ${item.observacoes}"></small>
 
-      <form th:action="@{/pedidos/avancar/{id}(id=${pedido.idPedido})}" method="post">
+      <form th:action="@{/pedidos/item/toggle/{id}(id=${item.idItem})}" method="post">
         <button type="submit" class="btn-avancar btn-espera">Mover para preparação</button>
       </form>
     </div>
 
     <div th:if="${#lists.isEmpty(emEspera)}" class="tabela-vazia">
-      Sem pedidos em espera.
+      Sem itens em espera.
     </div>
   </div>
 
@@ -70,31 +63,24 @@
   <div class="kds-column">
     <h3>Em preparação <span th:text="${countPreparacao}">0</span></h3>
 
-    <div th:each="pedido : ${emPreparacao}" class="pedido-card card-preparacao">
+    <div th:each="item : ${emPreparacao}" class="pedido-card card-preparacao">
       <div class="pedido-header">
-        <span>Mesa <span th:text="${pedido.mesa != null ? pedido.mesa.numero : 'Balcão'}">1</span></span>
-        <span class="pedido-tempo" th:text="${#temporals.format(pedido.dataHora, 'HH:mm')}">12:15</span>
+        <span>Mesa <span th:text="${item.pedido != null && item.pedido.mesa != null ? item.pedido.mesa.numero : 'Balcão'}">1</span></span>
+        <span class="pedido-tempo" th:text="${item.pedido != null && item.pedido.dataHora != null ? #temporals.format(item.pedido.dataHora, 'HH:mm') : ''}">12:15</span>
       </div>
 
-      <ul class="item-lista">
-        <li th:each="item : ${pedido.itens}">
-          <form th:action="@{/pedidos/item/toggle/{id}(id=${item.idItem})}" method="post" style="display:inline;">
-            <input type="checkbox" th:checked="${item.estado == 'PREPARADO'}" th:onchange="this.form.submit()">
-          </form>
-          <span th:classappend="${item.estado == 'PREPARADO'} ? 'item-feito' : ''">
-            <span th:text="${item.quantidade}">1</span>x <span th:text="${item.nomeProduto}">Produto</span>
-          </span>
-          <small style="color: #e11d48;" th:if="${item.observacoes != null}" th:text="'(' + ${item.observacoes} + ')'"></small>
-        </li>
-      </ul>
+      <div style="padding: 12px 0; font-size: 16px; font-weight: bold; color: #1e293b;">
+        <span th:text="${item.quantidade}">1</span>x <span th:text="${item.nomeProduto}">Produto</span>
+      </div>
+      <small style="color: #e11d48; display: block; margin-bottom: 8px;" th:if="${item.observacoes != null}" th:text="'Obs: ' + ${item.observacoes}"></small>
 
-      <form th:action="@{/pedidos/avancar/{id}(id=${pedido.idPedido})}" method="post">
+      <form th:action="@{/pedidos/item/toggle/{id}(id=${item.idItem})}" method="post">
         <button type="submit" class="btn-avancar btn-preparacao">Mover para pronto</button>
       </form>
     </div>
 
     <div th:if="${#lists.isEmpty(emPreparacao)}" class="tabela-vazia">
-      Sem pedidos em preparação.
+      Sem itens em preparação.
     </div>
   </div>
 
@@ -102,27 +88,23 @@
   <div class="kds-column">
     <h3>Pronto para recolha <span th:text="${countPronto}">0</span></h3>
 
-    <div th:each="pronto : ${pronto}" class="pedido-card card-pronto">
+    <div th:each="item : ${pronto}" class="pedido-card card-pronto">
       <div class="pedido-header">
-        <span>Mesa <span th:text="${pronto.mesa != null ? pronto.mesa.numero : 'Balcão'}">1</span></span>
-        <span class="pedido-tempo" th:text="${#temporals.format(pronto.dataHora, 'HH:mm')}">12:15</span>
+        <span>Mesa <span th:text="${item.pedido != null && item.pedido.mesa != null ? item.pedido.mesa.numero : 'Balcão'}">1</span></span>
+        <span class="pedido-tempo" th:text="${item.pedido != null && item.pedido.dataHora != null ? #temporals.format(item.pedido.dataHora, 'HH:mm') : ''}">12:15</span>
       </div>
 
-      <ul class="item-lista">
-        <li th:each="item : ${pronto.itens}">
-          <span th:classappend="${item.estado == 'PREPARADO'} ? 'item-feito' : ''">
-            ✓ <span th:text="${item.quantidade}">1</span>x <span th:text="${item.nomeProduto}">Produto</span>
-          </span>
-        </li>
-      </ul>
+      <div style="padding: 12px 0; font-size: 16px; font-weight: bold; color: #1e293b;">
+        ✓ <span th:text="${item.quantidade}">1</span>x <span th:text="${item.nomeProduto}">Produto</span>
+      </div>
 
-      <form th:action="@{/pedidos/avancar/{id}(id=${pronto.idPedido})}" method="post">
+      <form th:action="@{/pedidos/item/toggle/{id}(id=${item.idItem})}" method="post">
         <button type="submit" class="btn-avancar btn-pronto">Concluir / Arquivar</button>
       </form>
     </div>
 
     <div th:if="${#lists.isEmpty(pronto)}" class="tabela-vazia">
-      Sem pedidos prontos.
+      Sem itens prontos.
     </div>
   </div>
 

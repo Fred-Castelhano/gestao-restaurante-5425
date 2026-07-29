@@ -1,7 +1,7 @@
 package com._5.Gestao_Restaurante.Controller;
 
 import com._5.Gestao_Restaurante.model.Prato;
-import com._5.Gestao_Restaurante.repository.PratoRepository;
+import com._5.Gestao_Restaurante.Repository.PratoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

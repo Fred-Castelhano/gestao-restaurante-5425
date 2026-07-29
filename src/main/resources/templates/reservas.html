@@ -57,7 +57,7 @@
     <div class="turno-card">
       <h3>☀️ Almoço (12:00 - 15:30)</h3>
       <ul th:if="${not #lists.isEmpty(almocoHoje)}">
-        <li th:each="r : ${almoçoHoje}">
+        <li th:each="r : ${almocoHoje}">
           <strong th:text="${r.horaReserva}">14:15</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
 
           <!-- Botão de Confirmar Chegada -->

@@ -14,9 +14,11 @@
     <div class="mapa-container">
         <h2>Mapa do Restaurante</h2>
         <div class="grid-mesas">
-            <div th:each="mesa : ${mesas}"
-                 class="mesa-card"
-                 th:classappend="
+            <a th:each="mesa : ${mesas}"
+               th:href="@{/pedidos/novo(idMesa=${mesa.idMesa})}"
+               class="mesa-card"
+               style="text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;"
+               th:classappend="
                 (${mesa.capacidade == 2} ? ' mesa-quadrada' :
                 (${mesa.capacidade == 4} ? ' mesa-redonda-pequena' :
                 (${mesa.capacidade == 6} ? ' mesa-retangular' : ' mesa-redonda-grande'))) + ' ' +
@@ -30,7 +32,7 @@
 
                 <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;"
                       th:text="${reservasPorMesa.containsKey(mesa.idMesa) ? 'RESERVADO' : mesa.estado}">DISPONIVEL</span>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -98,18 +100,18 @@
     </div>
 </div>
 
-    <!-- Script para lidar com o clique dos detalhes sem quebrar o HTML -->
-    <script>
-        function mostrarDetalhes(element) {
-            const cliente = element.getAttribute('data-cliente');
-            const contacto = element.getAttribute('data-contacto');
-            const pessoas = element.getAttribute('data-pessoas');
-            const data = element.getAttribute('data-data');
-            const hora = element.getAttribute('data-hora');
+<!-- Script para lidar com o clique dos detalhes sem quebrar o HTML -->
+<script>
+    function mostrarDetalhes(element) {
+        const cliente = element.getAttribute('data-cliente');
+        const contacto = element.getAttribute('data-contacto');
+        const pessoas = element.getAttribute('data-pessoas');
+        const data = element.getAttribute('data-data');
+        const hora = element.getAttribute('data-hora');
 
-            alert(`Detalhes da Reserva:\nCliente: ${cliente}\nContacto: ${contacto}\nPessoas: ${pessoas}\nData: ${data}\nHora: ${hora}`);
-        }
-    </script>
+        alert(`Detalhes da Reserva:\nCliente: ${cliente}\nContacto: ${contacto}\nPessoas: ${pessoas}\nData: ${data}\nHora: ${hora}`);
+    }
+</script>
 
 </body>
 </html>

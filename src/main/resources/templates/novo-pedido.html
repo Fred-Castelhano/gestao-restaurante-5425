@@ -26,7 +26,7 @@
                 <div class="controlo-quantidade">
                     <!-- Input de quantidade associado ao preço para cálculo automático -->
                     <input type="number"
-                           name="quantidades[__${prato.idPrato}__]"
+                           th:name="|quantidades[${prato.idPrato}]|"
                            value="0"
                            min="0"
                            max="20"
@@ -41,37 +41,46 @@
             </div>
         </div>
 
-        <!-- Resumo do Total -->
+        <!-- Resumo do Total Acumulado -->
         <div class="resumo-total-container">
-            <span>Total a Pagar:</span>
-            <span id="valorTotal" class="valor-total-destaque">0.00€</span>
+            <span>Total da Mesa (Acumulado):</span>
+            <!-- Input oculto para guardar o valor base que já vinha da BD -->
+            <input type="hidden" id="totalAcumuladoInicial" th:value="${totalAcumulado}" />
+            <span id="valorTotal" class="valor-total-destaque" th:text="${totalAcumulado != null ? #numbers.formatDecimal(totalAcumulado, 1, 2) : '0.00'} + '€'">0.00€</span>
         </div>
 
-        <div class="form-submit">
-            <button type="submit" class="btn-guardar btn-enviar-pedido">
+        <div class="form-submit" style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-guardar btn-enviar-pedido" style="flex: 1;">
                 Enviar Pedido para a Cozinha
             </button>
+
+            <!-- Botão Partir para Pagamento -->
+            <a th:href="@{/pedidos/pagamento(idMesa=${mesa.idMesa})}" class="btn-guardar" style="background-color: #d97706; text-align: center; text-decoration: none; flex: 1; display: flex; align-items: center; justify-content: center;">
+                Partir para Pagamento
+            </a>
         </div>
     </form>
 
     <div class="voltar-link">
-        <a th:href="@{/mesas}">← Voltar às Mesas</a>
+        <a th:href="@{/pedidos/cozinha}">← Voltar à Cozinha</a>
     </div>
 </div>
 
-<!-- Script simples para calcular o total em tempo real -->
+<!-- Script para calcular o total somando o acumulado inicial e os novos inputs -->
 <script>
     function calcularTotal() {
-        let total = 0;
+        let acumuladoInicial = parseFloat(document.getElementById('totalAcumuladoInicial').value) || 0;
+        let totalAdicional = 0;
         const inputs = document.querySelectorAll('.input-quantidade');
 
         inputs.forEach(input => {
             const quantidade = parseInt(input.value) || 0;
             const preco = parseFloat(input.getAttribute('data-preco')) || 0;
-            total += quantidade * preco;
+            totalAdicional += quantidade * preco;
         });
 
-        document.getElementById('valorTotal').innerText = total.toFixed(2) + '€';
+        let totalFinal = acumuladoInicial + totalAdicional;
+        document.getElementById('valorTotal').innerText = totalFinal.toFixed(2) + '€';
     }
 </script>
 
