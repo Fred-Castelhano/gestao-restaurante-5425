@@ -64,6 +64,7 @@ public class MesaController {
 
         model.addAttribute("mesas", mesas);
         model.addAttribute("reservasPorMesa", reservasPorMesa);
-        return "mesas";
+        model.addAttribute("conteudo", "mesas");
+        return "layout";
     }
 }

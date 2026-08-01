@@ -28,7 +28,8 @@ public class ReservaController {
         carregarAtributosPainel(model);
         model.addAttribute("reserva", new Reserva());
         model.addAttribute("mesas", mesaRepository.findAll());
-        return "reservas";
+        model.addAttribute("conteudo", "reservas");
+        return "layout";
     }
 
     @GetMapping("/reservas/nova")
@@ -39,7 +40,8 @@ public class ReservaController {
         }
         model.addAttribute("reserva", reserva);
         model.addAttribute("mesas", mesaRepository.findAll());
-        return "nova-reserva";
+        model.addAttribute("conteudo", "nova-reserva");
+        return "layout";
     }
 
     @GetMapping("/reservas/cancelar/{id}")
@@ -93,7 +95,8 @@ public class ReservaController {
                     carregarAtributosPainel(model);
                     model.addAttribute("reserva", reserva);
                     model.addAttribute("mesas", mesaRepository.findAll());
-                    return "reservas";
+                    model.addAttribute("conteudo", "reservas");
+                    return "layout";
                 }
             }
         }
@@ -112,7 +115,8 @@ public class ReservaController {
                 carregarAtributosPainel(model);
                 model.addAttribute("reserva", reserva);
                 model.addAttribute("mesas", mesaRepository.findAll());
-                return "reservas";
+                model.addAttribute("conteudo", "reservas");
+                return "layout";
             }
         }
         // 3. Validar se a data é no passado
@@ -121,7 +125,8 @@ public class ReservaController {
             carregarAtributosPainel(model);
             model.addAttribute("reserva", reserva);
             model.addAttribute("mesas", mesaRepository.findAll());
-            return "reservas";
+            model.addAttribute("conteudo", "reservas");
+            return "layout";
         }
 
         // 4. Validar se a mesa já está ocupada no mesmo período de refeição (Almoço ou Jantar) na mesma data
@@ -142,7 +147,8 @@ public class ReservaController {
                 carregarAtributosPainel(model);
                 model.addAttribute("mesas", mesaRepository.findAll());
                 model.addAttribute("reserva", reserva);
-                return "reservas";
+                model.addAttribute("conteudo", "reservas");
+                return "layout";
             }
         }
 

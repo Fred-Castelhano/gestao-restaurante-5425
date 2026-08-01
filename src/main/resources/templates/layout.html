@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${tituloPage} ?: 'Restaurante App'">Restaurante App</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* Layout Geral com Sidebar */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background-color: #064e3b; /* Verde escuro elegante */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .sidebar-brand {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 40px;
+            padding-left: 10px;
+        }
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+        .sidebar-item {
+            display: block;
+            padding: 12px 15px;
+            color: #d1d5db;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: #047857;
+            color: white;
+        }
+        .sidebar-user {
+            background-color: #047857;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<!-- BARRA LATERAL FIXA -->
+<div class="sidebar">
+    <div>
+        <div class="sidebar-brand">Restaurante App</div>
+        <div class="sidebar-menu">
+            <a th:href="@{/dashboard}" class="sidebar-item" th:classappend="${menuAtivo == 'dashboard'} ? 'active'">Dashboard</a>
+            <a th:href="@{/reservas}" class="sidebar-item" th:classappend="${menuAtivo == 'reservas'} ? 'active'">Reservas</a>
+            <a th:href="@{/mesas}" class="sidebar-item" th:classappend="${menuAtivo == 'mesas'} ? 'active'">Mesas</a>
+            <a th:href="@{/pedidos/cozinha}" class="sidebar-item" th:classappend="${menuAtivo == 'pedidos'} ? 'active'">Pedidos</a>
+            <a th:href="@{/menu}" class="sidebar-item" th:classappend="${menuAtivo == 'menu'} ? 'active'">Menu</a>
+            <a th:href="@{/pedidos/pagamentos}" class="sidebar-item" th:classappend="${menuAtivo == 'pagamentos'} ? 'active'">Pagamentos</a>
+            <a th:href="@{/administracao}" class="sidebar-item" th:classappend="${menuAtivo == 'administracao'} ? 'active'">Administração</a>
+        </div>
+    </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL DINÂMICO -->
+<div class="main-content">
+    <div th:replace="~{__${conteudo}__}"></div>
+</div>
+
+</body>
+</html>

@@ -11,6 +11,11 @@
     <h1>Criar Pedido</h1>
     <h3 class="subtitulo-mesa" th:text="'Mesa: ' + ${mesa.numero}">Mesa</h3>
 
+    <!-- Mensagem de Erro Dinâmica (Validação de Stock) -->
+    <div th:if="${erro}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;" th:text="${erro}">
+        Mensagem de erro
+    </div>
+
     <form th:action="@{/pedidos/guardar}" method="post" class="form-card">
         <input type="hidden" name="idMesa" th:value="${mesa.idMesa}">
 

@@ -19,6 +19,7 @@ public class Reserva {
     private Integer numeroPessoas;
     private LocalDate dataReserva;
     private LocalTime horaReserva;
+    private String estado;
 
     // Opcional: associação direta com a mesa (se a reserva for atribuída a uma mesa específica)
     @ManyToOne

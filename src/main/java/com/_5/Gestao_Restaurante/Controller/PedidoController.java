@@ -61,7 +61,7 @@ public class PedidoController {
     public String novoPedidoForm(@RequestParam("idMesa") Integer idMesa, Model model) {
         Mesa mesa = mesaRepository.findById(idMesa).orElse(null);
         model.addAttribute("mesa", mesa);
-        model.addAttribute("pratos", pratoRepository.findByEstado("Disponível"));
+        model.addAttribute("pratos", pratoRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "idPrato")));
 
         double totalAcumulado = 0.0;
 
@@ -103,64 +103,102 @@ public class PedidoController {
         return "novo-pedido";
     }
 
-    // 3. Guardar o pedido e os itens individualmente com segurança total na BD
+    // 3. Guardar o pedido e os itens individualmente com validação rigorosa de stock
     @PostMapping("/pedidos/guardar")
     public String guardarPedido(@RequestParam("idMesa") Integer idMesa,
-                                @RequestParam Map<String, String> allParams) {
+                                @RequestParam Map<String, String> allParams,
+                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
 
         System.out.println("--> A tentar guardar pedido para a mesa ID: " + idMesa);
 
         Mesa mesa = mesaRepository.findById(idMesa).orElse(null);
-        if (mesa != null) {
-            Pedido pedido = new Pedido();
-            pedido.setMesa(mesa);
-            pedido.setDataHora(LocalDateTime.now());
-            pedido.setEstado("Em espera");
-            pedido = pedidoRepository.save(pedido);
-            System.out.println("--> Pedido principal guardado com ID: " + pedido.getIdPedido());
+        if (mesa == null) {
+            System.out.println("--> ERRO: Mesa com ID " + idMesa + " não foi encontrada!");
+            return "redirect:/pedidos/cozinha";
+        }
 
-            List<ItemPedido> novosItens = new ArrayList<>();
+        // --- PASSO 1: PRÉ-VALIDAÇÃO DE STOCK DE TODOS OS ITENS ---
+        for (Map.Entry<String, String> entry : allParams.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
 
-            for (Map.Entry<String, String> entry : allParams.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
+            if (key.startsWith("quantidades[") && key.endsWith("]")) {
+                String idStr = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
 
-                if (key.startsWith("quantidades[") && key.endsWith("]")) {
-                    String idStr = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
+                if (idStr.matches("\\d+") && value != null && !value.trim().isEmpty()) {
+                    int quantidadeSolicitada = Integer.parseInt(value);
 
-                    if (idStr.matches("\\d+") && value != null && !value.trim().isEmpty()) {
-                        int quantidadeTotal = Integer.parseInt(value);
+                    if (quantidadeSolicitada > 0) {
+                        Integer idPrato = Integer.parseInt(idStr);
+                        Prato prato = pratoRepository.findById(idPrato).orElse(null);
 
-                        if (quantidadeTotal > 0) {
-                            Integer idPrato = Integer.parseInt(idStr);
-                            Prato prato = pratoRepository.findById(idPrato).orElse(null);
+                        if (prato != null) {
+                            int stockAtual = (prato.getQuantidade() != null) ? prato.getQuantidade() : 0;
 
-                            if (prato != null) {
-                                // Cria um registo individual (quantidade = 1) para cada unidade pedida
-                                for (int i = 0; i < quantidadeTotal; i++) {
-                                    ItemPedido item = new ItemPedido();
-                                    item.setPedido(pedido);
-                                    item.setNomeProduto(prato.getNome());
-                                    item.setQuantidade(1);
-                                    item.setEstado("PENDENTE");
+                            // Validação 1: Item totalmente indisponível
+                            if (stockAtual <= 0) {
+                                redirectAttributes.addFlashAttribute("erro", "Item indisponível: " + prato.getNome());
+                                return "redirect:/pedidos/novo?idMesa=" + idMesa;
+                            }
 
-                                    ItemPedido itemGuardado = itemPedidoRepository.save(item);
-                                    novosItens.add(itemGuardado);
-                                }
-                                System.out.println("--> SUCESSO: " + quantidadeTotal + " item(ns) guardados -> " + prato.getNome());
+                            // Validação 2: Stock insuficiente para a quantidade pedida
+                            if (quantidadeSolicitada > stockAtual) {
+                                redirectAttributes.addFlashAttribute("erro", "Insuficiente stock para " + prato.getNome() + " (" + stockAtual + " disponíveis).");
+                                return "redirect:/pedidos/novo?idMesa=" + idMesa;
                             }
                         }
                     }
                 }
             }
-
-            // ATRIBUIÇÃO CRUCIAL: Garante que o pedido fica com a lista de itens associada em memória
-            pedido.setItens(novosItens);
-            pedidoRepository.save(pedido);
-
-        } else {
-            System.out.println("--> ERRO: Mesa com ID " + idMesa + " não foi encontrada!");
         }
+
+        // --- PASSO 2: GUARDAR PEDIDO E DESCONTAR DO STOCK ---
+        Pedido pedido = new Pedido();
+        pedido.setMesa(mesa);
+        pedido.setDataHora(LocalDateTime.now());
+        pedido.setEstado("Em espera");
+        pedido = pedidoRepository.save(pedido);
+
+        List<ItemPedido> novosItens = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : allParams.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            if (key.startsWith("quantidades[") && key.endsWith("]")) {
+                String idStr = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
+
+                if (idStr.matches("\\d+") && value != null && !value.trim().isEmpty()) {
+                    int quantidadeTotal = Integer.parseInt(value);
+
+                    if (quantidadeTotal > 0) {
+                        Integer idPrato = Integer.parseInt(idStr);
+                        Prato prato = pratoRepository.findById(idPrato).orElse(null);
+
+                        if (prato != null) {
+                            // Atualiza o stock na base de dados
+                            prato.setQuantidade(prato.getQuantidade() - quantidadeTotal);
+                            pratoRepository.save(prato);
+
+                            // Cria o registo individual (quantidade = 1) para cada unidade pedida
+                            for (int i = 0; i < quantidadeTotal; i++) {
+                                ItemPedido item = new ItemPedido();
+                                item.setPedido(pedido);
+                                item.setNomeProduto(prato.getNome());
+                                item.setQuantidade(1);
+                                item.setEstado("PENDENTE");
+
+                                ItemPedido itemGuardado = itemPedidoRepository.save(item);
+                                novosItens.add(itemGuardado);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        pedido.setItens(novosItens);
+        pedidoRepository.save(pedido);
 
         return "redirect:/pedidos/cozinha";
     }

@@ -9,6 +9,16 @@
 
 <div class="container" style="max-width: 1100px;">
 
+  <!-- Mensagem de Erro Dinâmica (Validação de Stock ao Pedir) -->
+  <div th:if="${erro}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;" th:text="${erro}">
+    Mensagem de erro
+  </div>
+
+  <!-- Mensagem de Sucesso -->
+  <div th:if="${sucesso}" style="background-color: #d1fae5; color: #065f46; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #a7f3d0; font-weight: 600;">
+    <span th:text="${sucesso}">Sucesso</span>
+  </div>
+
   <!-- Cabeçalho com botão Novo Prato -->
   <div class="menu-header-flex">
     <div>
@@ -61,11 +71,29 @@
         <td style="color: #4b5563;" th:text="${prato.categoria}">Categoria</td>
         <td style="font-weight: 600;" th:text="${prato.preco} + '€'">0,00€</td>
         <td>
-          <span th:if="${prato.estado == 'Disponível'}" class="badge-prato-disponivel">Disponível</span>
-          <span th:unless="${prato.estado == 'Disponível'}" class="badge-prato-indisponivel">Indisponível</span>
+          <!-- Mais de 10: Disponível -->
+          <span th:if="${prato.quantidade != null and prato.quantidade > 10}"
+                class="badge-prato-disponivel"
+                th:text="'Disponível (' + ${prato.quantidade} + ')'">Disponível</span>
+
+          <!-- Entre 1 e 10: Stock Baixo (Amarelo) -->
+          <span th:if="${prato.quantidade != null and prato.quantidade > 0 and prato.quantidade <= 10}"
+                style="background-color: #fef3c7; color: #d97706; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"
+                th:text="'Stock Baixo (' + ${prato.quantidade} + ')'">Stock Baixo</span>
+
+          <!-- 0 ou nulo: Indisponível -->
+          <span th:if="${prato.quantidade == null or prato.quantidade == 0}"
+                class="badge-prato-indisponivel">Indisponível (0)</span>
         </td>
         <td style="text-align: right;">
-          <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Editar</a>
+          <!-- Botão que abre o modal injetando os dados do prato -->
+          <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.9rem;"
+             class="btn-editar"
+             th:data-id="${prato.idPrato}"
+             th:data-nome="${prato.nome}"
+             th:data-categoria="${prato.categoria}"
+             th:data-preco="${prato.preco}"
+             th:data-quantidade="${prato.quantidade}">Editar</a>
         </td>
       </tr>
       <tr th:if="${#lists.isEmpty(pratos)}">
@@ -76,6 +104,72 @@
   </div>
 
 </div>
+
+<!-- MODAL DE EDIÇÃO FLUTUANTE -->
+<div id="modalEditar" class="modal-overlay">
+  <div class="modal-content">
+    <h2 style="margin-top: 0; color: #111827;">Editar Prato</h2>
+    <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.9rem;">Atualize os dados e a quantidade em stock.</p>
+
+    <form id="formEditarPrato" method="post">
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Nome do Prato</label>
+        <input type="text" id="editNome" name="nome" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Categoria</label>
+        <input type="text" id="editCategoria" name="categoria" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Preço (€)</label>
+        <input type="number" step="0.01" id="editPreco" name="preco" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Quantidade em Stock</label>
+        <input type="number" id="editQuantidade" name="quantidade" min="0" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" onclick="fecharModalEditar()" style="background-color: #e5e7eb; color: #374151; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
+        <button type="submit" style="background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">Guardar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Script para controlar a abertura/fecho do modal -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const botoesEditar = document.querySelectorAll('.btn-editar');
+
+    botoesEditar.forEach(botao => {
+      botao.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const id = this.getAttribute('th:data-id') || this.getAttribute('data-id');
+        const nome = this.getAttribute('th:data-nome') || this.getAttribute('data-nome');
+        const categoria = this.getAttribute('th:data-categoria') || this.getAttribute('data-categoria');
+        const preco = this.getAttribute('th:data-preco') || this.getAttribute('data-preco');
+        const quantidade = this.getAttribute('th:data-quantidade') || this.getAttribute('data-quantidade');
+
+        document.getElementById('formEditarPrato').action = '/pratos/atualizar/' + id;
+        document.getElementById('editNome').value = nome;
+        document.getElementById('editCategoria').value = categoria;
+        document.getElementById('editPreco').value = preco;
+        document.getElementById('editQuantidade').value = (quantidade !== 'null' && quantidade !== '') ? quantidade : 0;
+
+        document.getElementById('modalEditar').style.display = 'flex';
+      });
+    });
+  });
+
+  function fecharModalEditar() {
+    document.getElementById('modalEditar').style.display = 'none';
+  }
+</script>
 
 </body>
 </html>

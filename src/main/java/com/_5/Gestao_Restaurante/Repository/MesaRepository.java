@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MesaRepository extends JpaRepository<Mesa, Integer> {
+    long countByEstado(String estado);
 }
