@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Restaurante App</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <style>
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f3f4f6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    .login-card {
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        box-sizing: border-box;
+    }
+    .login-title {
+        text-align: center;
+        color: #064e3b;
+        margin-bottom: 24px;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #374151;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background-color: #047857;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-login:hover {
+        background-color: #064e3b;
+    }
+    .alert-error {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    .register-link {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #4b5563;
+    }
+    .register-link a {
+        color: #047857;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-title">Restaurante App</div>
+
+  <!-- Mensagem de erro caso as credenciais estejam erradas -->
+  <div th:if="${erro}" class="alert-error" th:text="${erro}">
+    Erro no login
+  </div>
+
+  <form th:action="@{/login}" method="post">
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required placeholder="O teu email">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Palavra-passe:</label>
+      <input type="password" id="password" name="password" required placeholder="A tua palavra-passe">
+    </div>
+
+    <button type="submit" class="btn-login">Entrar</button>
+  </form>
+
+  <!-- Opção para registo de novo utilizador -->
+  <div class="register-link">
+    <p>Se não tem conta, <a th:href="@{/registar-utilizador}">registe-se aqui</a>.</p>
+  </div>
+</div>
+
+</body>
+</html>

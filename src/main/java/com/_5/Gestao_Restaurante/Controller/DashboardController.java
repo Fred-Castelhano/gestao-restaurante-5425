@@ -26,9 +26,23 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        // 1. Métricas
+        // 1. Total de reservas guardadas ou para hoje (mantém o que preferires)
         long reservasHoje = reservaRepository.count();
-        long mesasOcupadas = mesaRepository.countByEstado("OCUPADA");
+
+        // Conta apenas as mesas estritamente ocupadas
+        long mesasOcupadas = mesaRepository.findAll().stream()
+                .filter(m -> m.getEstado() != null && (m.getEstado().equalsIgnoreCase("OCUPADA") || m.getEstado().equalsIgnoreCase("Ocupada")))
+                .count();
+
+        // Conta apenas as mesas que possuem reservas ativas para o dia de hoje
+        java.time.LocalDate hoje = java.time.LocalDate.now();
+        long mesasReservadas = reservaRepository.findAll().stream()
+                .filter(r -> r.getDataReserva() != null && r.getDataReserva().equals(hoje))
+                .map(r -> r.getMesa() != null ? r.getMesa().getIdMesa() : null)
+                .filter(id -> id != null)
+                .distinct()
+                .count();
+
         long pedidosAtivos = pedidoRepository.count();
 
         double vendasDia = pedidoRepository.findAll().stream()
@@ -37,6 +51,7 @@ public class DashboardController {
 
         model.addAttribute("reservasHoje", reservasHoje);
         model.addAttribute("mesasOcupadas", mesasOcupadas);
+        model.addAttribute("mesasReservadas", mesasReservadas); // <-- Nova variável enviada para o HTML
         model.addAttribute("pedidosAtivos", pedidosAtivos);
         model.addAttribute("vendasDia", vendasDia);
 
@@ -46,7 +61,7 @@ public class DashboardController {
 
         // 3. Adicionar as listas reais para as novas secções
         model.addAttribute("listaMesas", mesaRepository.findAll());
-        model.addAttribute("pagamentosRecentes", pagamentoRepository.findAll()); // Ou usa um método com limite se preferires
+        model.addAttribute("pagamentosRecentes", pagamentoRepository.findAll());
 
         model.addAttribute("conteudo", "dashboard");
         return "layout";

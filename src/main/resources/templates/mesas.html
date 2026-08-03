@@ -8,37 +8,67 @@
 <body>
 
 <div class="container">
+
+    <div th:if="${erroPermissao}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;">
+        <span th:text="${erroPermissao}">Erro de permissão</span>
+    </div>
+
     <h1>Restaurante - Gestão de Mesas</h1>
 
-    <!-- 1. MAPA VISUAL DE MESAS -->
     <div class="mapa-container">
         <h2>Mapa do Restaurante</h2>
         <div class="grid-mesas">
-            <a th:each="mesa : ${mesas}"
-               th:href="@{/pedidos/novo(idMesa=${mesa.idMesa})}"
-               class="mesa-card"
-               style="text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;"
-               th:classappend="
-                (${mesa.capacidade == 2} ? ' mesa-quadrada' :
-                (${mesa.capacidade == 4} ? ' mesa-redonda-pequena' :
-                (${mesa.capacidade == 6} ? ' mesa-retangular' : ' mesa-redonda-grande'))) + ' ' +
-                (${reservasPorMesa.containsKey(mesa.idMesa)} ? 'card-reservada' :
-                (${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'} ? 'card-ocupada' : 'card-disponivel'))">
+            <div th:each="mesa : ${mesas}"
+                 class="mesa-card"
+                 th:classappend="
+                    (${mesa.capacidade == 2} ? ' mesa-quadrada' :
+                    (${mesa.capacidade == 4} ? ' mesa-redonda-pequena' :
+                    (${mesa.capacidade == 6} ? ' mesa-retangular' : ' mesa-redonda-grande'))) + ' ' +
+                    (${reservasPorMesa.containsKey(mesa.idMesa)} ? 'card-reservada' :
+                    (${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'} ? 'card-ocupada' : 'card-disponivel'))"
+                 style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
 
-                <span style="font-size: 1rem;">Mesa <span th:text="${mesa.numero}">1</span></span>
-                <span style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">
-                    Lugares: <span th:text="${mesa.capacidade}">4</span>
-                </span>
+                <!-- 1. MESA RESERVADA (AMARELA): Abre o modal de detalhes -->
+                <a th:if="${reservasPorMesa.containsKey(mesa.idMesa)}"
+                   href="#"
+                   class="btn-detalhes"
+                   th:data-cliente="${reservasPorMesa[mesa.idMesa].nomeCliente}"
+                   th:data-contacto="${reservasPorMesa[mesa.idMesa].contacto}"
+                   th:data-pessoas="${reservasPorMesa[mesa.idMesa].numeroPessoas}"
+                   th:data-data="${reservasPorMesa[mesa.idMesa].dataReserva}"
+                   th:data-hora="${reservasPorMesa[mesa.idMesa].horaReserva}"
+                   onclick="mostrarDetalhes(this); return false;"
+                   style="text-decoration: none; color: inherit; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                    <span style="font-size: 1rem;">Mesa <span th:text="${mesa.numero}">1</span></span>
+                    <span style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">Lugares: <span th:text="${mesa.capacidade}">4</span></span>
+                    <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;">RESERVADO</span>
+                </a>
 
-                <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;"
-                      th:text="${reservasPorMesa.containsKey(mesa.idMesa) ? 'RESERVADO' : mesa.estado}">DISPONIVEL</span>
-            </a>
+                <!-- 2. MESA OCUPADA (VERMELHA): Permite criar pedido -->
+                <a th:if="${!reservasPorMesa.containsKey(mesa.idMesa) && (mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada')}"
+                   th:href="@{/mesas/pedido/novo(idMesa=${mesa.idMesa})}"
+                   style="text-decoration: none; color: inherit; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                    <span style="font-size: 1rem;">Mesa <span th:text="${mesa.numero}">1</span></span>
+                    <span style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">Lugares: <span th:text="${mesa.capacidade}">4</span></span>
+                    <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;"
+                          th:text="${mesa.estado}">OCUPADA</span>
+                </a>
+
+                <!-- 3. MESA LIVRE (VERDE): Sem link de clique -->
+                <div th:if="${!reservasPorMesa.containsKey(mesa.idMesa) && !(mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada')}"
+                     style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <span style="font-size: 1rem;">Mesa <span th:text="${mesa.numero}">1</span></span>
+                    <span style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">Lugares: <span th:text="${mesa.capacidade}">4</span></span>
+                    <span style="font-size: 0.65rem; margin-top: 3px; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;"
+                          th:text="${mesa.estado}">DISPONIVEL</span>
+                </div>
+
+            </div>
         </div>
     </div>
 
     <hr style="margin: 40px 0; border: 0; border-top: 1px solid #ddd;">
 
-    <!-- 2. TABELA TRADICIONAL -->
     <div>
         <h2>Lista de Mesas (Tabela)</h2>
         <table>
@@ -52,31 +82,15 @@
             </thead>
             <tbody>
             <tr th:each="mesa : ${mesas}">
-                <!-- Número da Mesa -->
                 <td style="font-weight: 600;" th:text="'Mesa ' + ${mesa.numero}">1</td>
 
-                <!-- Capacidade -->
                 <td th:text="${mesa.capacidade} + ' Lugares'">4 Lugares</td>
 
-                <!-- Estado Atual / Reservas -->
                 <td>
-                    <!-- 1. Se estiver reservado -->
                     <div th:if="${reservasPorMesa.containsKey(mesa.idMesa)}" style="display: inline-block;">
                         <span class="badge badge-reservada">RESERVADO</span>
-                        <a href="#"
-                           class="btn-detalhes"
-                           th:data-cliente="${reservasPorMesa[mesa.idMesa].nomeCliente}"
-                           th:data-contacto="${reservasPorMesa[mesa.idMesa].contacto}"
-                           th:data-pessoas="${reservasPorMesa[mesa.idMesa].numeroPessoas}"
-                           th:data-data="${reservasPorMesa[mesa.idMesa].dataReserva}"
-                           th:data-hora="${reservasPorMesa[mesa.idMesa].horaReserva}"
-                           onclick="mostrarDetalhes(this); return false;"
-                           style="margin-left: 10px; font-size: 0.85rem; color: #007bff; text-decoration: none; font-weight: bold;">
-                            Ver Detalhes
-                        </a>
                     </div>
 
-                    <!-- 2. Se não estiver reservado -->
                     <div th:unless="${reservasPorMesa.containsKey(mesa.idMesa)}" style="display: inline-block;">
                         <span th:if="${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'}"
                               class="badge badge-ocupada" th:text="${mesa.estado}">OCUPADA</span>
@@ -86,12 +100,24 @@
                     </div>
                 </td>
 
-                <!-- Ação (Criar Pedido se Ocupada) -->
                 <td style="text-align: right;">
-                    <a th:if="${mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada'}"
-                       th:href="@{/pedidos/novo(idMesa=${mesa.idMesa})}"
+                    <a th:if="${(mesa.estado == 'OCUPADA' || mesa.estado == 'Ocupada') && !reservasPorMesa.containsKey(mesa.idMesa)}"
+                       th:href="@{/mesas/pedido/novo(idMesa=${mesa.idMesa})}"
                        style="background-color: #0f766e; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
                         Criar Pedido
+                    </a>
+
+                    <a th:if="${reservasPorMesa.containsKey(mesa.idMesa)}"
+                       href="#"
+                       class="btn-detalhes"
+                       th:data-cliente="${reservasPorMesa[mesa.idMesa].nomeCliente}"
+                       th:data-contacto="${reservasPorMesa[mesa.idMesa].contacto}"
+                       th:data-pessoas="${reservasPorMesa[mesa.idMesa].numeroPessoas}"
+                       th:data-data="${reservasPorMesa[mesa.idMesa].dataReserva}"
+                       th:data-hora="${reservasPorMesa[mesa.idMesa].horaReserva}"
+                       onclick="mostrarDetalhes(this); return false;"
+                       style="font-size: 0.85rem; color: #007bff; text-decoration: none; font-weight: bold;">
+                        Ver Detalhes
                     </a>
                 </td>
             </tr>
@@ -100,16 +126,45 @@
     </div>
 </div>
 
-<!-- Script para lidar com o clique dos detalhes sem quebrar o HTML -->
+<div id="modalDetalhes" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Detalhes da Reserva</h3>
+            <button type="button" onclick="fecharDetalhes()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #6b7280;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong>Cliente:</strong> <span id="modalCliente"></span></p>
+            <p><strong>Contacto:</strong> <span id="modalContacto"></span></p>
+            <p><strong>Número de Pessoas:</strong> <span id="modalPessoas"></span></p>
+            <p><strong>Data:</strong> <span id="modalData"></span></p>
+            <p><strong>Hora:</strong> <span id="modalHora"></span></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-fechar" onclick="fecharDetalhes()">Fechar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     function mostrarDetalhes(element) {
-        const cliente = element.getAttribute('data-cliente');
-        const contacto = element.getAttribute('data-contacto');
-        const pessoas = element.getAttribute('data-pessoas');
-        const data = element.getAttribute('data-data');
-        const hora = element.getAttribute('data-hora');
+        document.getElementById('modalCliente').innerText = element.getAttribute('data-cliente');
+        document.getElementById('modalContacto').innerText = element.getAttribute('data-contacto');
+        document.getElementById('modalPessoas').innerText = element.getAttribute('data-pessoas');
+        document.getElementById('modalData').innerText = element.getAttribute('data-data');
+        document.getElementById('modalHora').innerText = element.getAttribute('data-hora');
 
-        alert(`Detalhes da Reserva:\nCliente: ${cliente}\nContacto: ${contacto}\nPessoas: ${pessoas}\nData: ${data}\nHora: ${hora}`);
+        document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharDetalhes() {
+        document.getElementById('modalDetalhes').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalDetalhes');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
     }
 </script>
 

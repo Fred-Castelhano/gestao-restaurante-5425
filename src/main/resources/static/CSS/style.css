@@ -442,6 +442,7 @@ tr:hover {
     font-size: 0.85rem;
     font-weight: 600;
 }
+
 /* =========================================================
    5. ESTILOS DO CONTADOR DE QUANTIDADES E TOTAL DO PEDIDO
    ========================================================= */
@@ -495,8 +496,9 @@ tr:hover {
     color: #0f766e;
     font-size: 1.4rem;
 }
+
 /* =========================================================
-   6. ESTILOS DO MODAL DE EDIÇÃO
+   6. ESTILOS DO MODAL DE EDIÇÃO E DETALHES (Estilo Menus)
    ========================================================= */
 
 .modal-overlay {
@@ -506,7 +508,7 @@ tr:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -514,9 +516,138 @@ tr:hover {
 
 .modal-content {
     background: white;
-    padding: 30px;
+    padding: 25px;
     border-radius: 8px;
     width: 100%;
-    max-width: 500px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-width: 450px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #111827;
+}
+
+.modal-body p {
+    margin: 10px 0;
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.modal-body strong {
+    color: #1f2937;
+}
+
+.modal-footer {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.btn-fechar {
+    background-color: #6b7280;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-fechar:hover {
+    background-color: #4b5563;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* =========================================================
+   GRELHA DE PAGAMENTOS E MESAS
+   ========================================================= */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Garante que a grelha de pagamentos distribui os cartões em 3 colunas */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.col-md-4 {
+    flex: 0 0 calc(33.333% - 14px);
+    max-width: calc(33.333% - 14px);
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+/* Responsividade para ecrãs menores */
+@media (max-width: 992px) {
+    .col-md-4 {
+        flex: 0 0 calc(50% - 10px);
+        max-width: calc(50% - 10px);
+    }
+}
+
+@media (max-width: 768px) {
+    .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Estilo consistente para os cartões das mesas / pagamentos */
+.card {
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-header {
+    background-color: #0d6efd;
+    color: white;
+    padding: 12px 15px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+.badge-livre {
+    background-color: #0d6efd;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: inline-block;
 }

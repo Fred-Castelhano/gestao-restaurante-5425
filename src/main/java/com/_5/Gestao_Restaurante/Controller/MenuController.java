@@ -1,7 +1,9 @@
 package com._5.Gestao_Restaurante.Controller;
 
 import com._5.Gestao_Restaurante.model.Prato;
+import com._5.Gestao_Restaurante.model.Utilizador;
 import com._5.Gestao_Restaurante.Repository.PratoRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,10 +25,8 @@ public class MenuController {
 
     @GetMapping("/menu")
     public String verMenu(Model model) {
-        // Ordenar por ID para manter a tabela sempre na mesma ordem original
         List<Prato> pratos = pratoRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "idPrato"));
 
-        // Corrigir a contagem exata com base na quantidade real apresentada na tabela
         long ativos = pratos.stream().filter(p -> p.getQuantidade() != null && p.getQuantidade() > 10).count();
         long stockBaixo = pratos.stream().filter(p -> p.getQuantidade() != null && p.getQuantidade() > 0 && p.getQuantidade() <= 10).count();
         long indisponiveis = pratos.stream().filter(p -> p.getQuantidade() == null || p.getQuantidade() == 0).count();
@@ -39,18 +40,30 @@ public class MenuController {
         }
 
         model.addAttribute("pratos", pratos);
-        model.addAttribute("totalAtivos", ativos + stockBaixo); // Considera ativos tudo o que tem stock > 0
-        model.addAttribute("totalIndisponiveis", indisponiveis); // Só conta 0 ou nulo
+        model.addAttribute("totalAtivos", ativos + stockBaixo);
+        model.addAttribute("totalIndisponiveis", indisponiveis);
         model.addAttribute("totalCategorias", categorias);
         model.addAttribute("precoMedio", precoMedio);
-        model.addAttribute("conteudo", "menu"); // Nome do ficheiro HTML do menu (ex: menu.html)
+        model.addAttribute("conteudo", "menu");
         return "layout";
     }
 
     // --- MÉTODOS DE EDIÇÃO DE PRATOS ---
 
     @GetMapping("/pratos/editar/{id}")
-    public String editarPratoForm(@PathVariable("id") Integer id, Model model) {
+    public String editarPratoForm(@PathVariable("id") Integer id, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        // Validação de segurança no GET do formulário de edição
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Tem de se registar para poder alterar estes dados.");
+            return "redirect:/login";
+        }
+        if (!user.getFuncao().equals("Gerente") && !user.getFuncao().equals("Administrador")) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Não tem permissão para alterar estes dados.");
+            return "redirect:/menu";
+        }
+
         Prato prato = pratoRepository.findById(id).orElse(null);
         if (prato == null) {
             return "redirect:/menu";
@@ -64,8 +77,25 @@ public class MenuController {
                                  @RequestParam("nome") String nome,
                                  @RequestParam("categoria") String categoria,
                                  @RequestParam("preco") Double preco,
-                                 @RequestParam("quantidade") Integer quantidade) {
+                                 @RequestParam("quantidade") Integer quantidade,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
 
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        // 1. Verificar se alguém está logado
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Tem de se registar para poder alterar estes dados.");
+            return "redirect:/login";
+        }
+
+        // 2. Verificar se tem permissão (apenas Gerente ou Administrador podem alterar)
+        if (!user.getFuncao().equals("Gerente") && !user.getFuncao().equals("Administrador")) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Não tem permissão para alterar estes dados.");
+            return "redirect:/menu";
+        }
+
+        // 3. Executar atualização se passar nas validações
         Prato prato = pratoRepository.findById(id).orElse(null);
         if (prato != null) {
             prato.setNome(nome);
@@ -73,7 +103,6 @@ public class MenuController {
             prato.setPreco(BigDecimal.valueOf(preco));
             prato.setQuantidade(quantidade);
 
-            // Atualizar o estado em texto consoante a quantidade introduzida
             if (quantidade > 10) {
                 prato.setEstado("Disponível");
             } else if (quantidade > 0) {

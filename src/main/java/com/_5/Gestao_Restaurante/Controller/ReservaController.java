@@ -2,8 +2,10 @@ package com._5.Gestao_Restaurante.Controller;
 
 import com._5.Gestao_Restaurante.model.Reserva;
 import com._5.Gestao_Restaurante.model.Mesa;
+import com._5.Gestao_Restaurante.model.Utilizador;
 import com._5.Gestao_Restaurante.Repository.MesaRepository;
 import com._5.Gestao_Restaurante.Repository.ReservaRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,16 +27,38 @@ public class ReservaController {
     private MesaRepository mesaRepository;
 
     @GetMapping("/reservas")
-    public String listarReservas(Model model) {
-        carregarAtributosPainel(model);
+    public String listarReservas(Model model, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        // Cozinheiros não têm acesso a reservas
+        boolean temPermissao = user != null && (
+                user.getFuncao().equalsIgnoreCase("Gerente") ||
+                        user.getFuncao().equalsIgnoreCase("Administrador") ||
+                        user.getFuncao().equalsIgnoreCase("Garçom")
+        );
+
+        if (!temPermissao) {
+            model.addAttribute("erroPermissao", "Acesso Negado: Não tem permissões para aceder à Gestão de Reservas.");
+        }
+
+        // Se tiver permissão carrega os dados normais, senão deixa listas vazias/painel limpo
+        carregarAtributosPainel(model, temPermissao);
         model.addAttribute("reserva", new Reserva());
-        model.addAttribute("mesas", mesaRepository.findAll());
+        model.addAttribute("mesas", temPermissao ? mesaRepository.findAll() : new ArrayList<>());
         model.addAttribute("conteudo", "reservas");
+        model.addAttribute("menuAtivo", "reservas");
+        model.addAttribute("tituloPage", "Gestão de Reservas - Restaurante App");
+
         return "layout";
     }
 
     @GetMapping("/reservas/nova")
-    public String novaReservaForm(Model model, @RequestParam(required = false) Integer idMesa) {
+    public String novaReservaForm(Model model, @RequestParam(required = false) Integer idMesa, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+        if (user == null || user.getFuncao().equalsIgnoreCase("Cozinheiro")) {
+            return "redirect:/reservas";
+        }
+
         Reserva reserva = new Reserva();
         if (idMesa != null) {
             mesaRepository.findById(idMesa).ifPresent(reserva::setMesa);
@@ -41,26 +66,37 @@ public class ReservaController {
         model.addAttribute("reserva", reserva);
         model.addAttribute("mesas", mesaRepository.findAll());
         model.addAttribute("conteudo", "nova-reserva");
+        model.addAttribute("menuAtivo", "reservas");
+        model.addAttribute("tituloPage", "Nova Reserva - Restaurante App");
+
         return "layout";
     }
 
     @GetMapping("/reservas/cancelar/{id}")
-    public String cancelarReserva(@PathVariable Integer id) {
-        // 1. Procurar a reserva antes de a apagar para sabermos qual era a mesa
+    public String cancelarReserva(@PathVariable Integer id, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+        if (user == null || user.getFuncao().equalsIgnoreCase("Cozinheiro")) {
+            return "redirect:/reservas";
+        }
+
         Reserva reserva = reservaRepository.findById(id).orElse(null);
 
         if (reserva != null && reserva.getMesa() != null) {
             Mesa mesa = reserva.getMesa();
-
-            // 2. Libertar a mesa (ajusta o método ao nome que usas, ex: setEstado("DISPONIVEL"))
             mesa.setEstado("DISPONIVEL");
             mesaRepository.save(mesa);
         }
         reservaRepository.deleteById(id);
         return "redirect:/reservas";
     }
+
     @GetMapping("/reservas/chegada/{id}")
-    public String confirmarChegada(@PathVariable Integer id) {
+    public String confirmarChegada(@PathVariable Integer id, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+        if (user == null || user.getFuncao().equalsIgnoreCase("Cozinheiro")) {
+            return "redirect:/reservas";
+        }
+
         Reserva reserva = reservaRepository.findById(id).orElse(null);
 
         if (reserva != null) {
@@ -69,7 +105,6 @@ public class ReservaController {
                 mesa.setEstado("OCUPADA");
                 mesaRepository.save(mesa);
             }
-            // Apaga a reserva da lista ativa pois o cliente já chegou
             reservaRepository.deleteById(id);
         }
 
@@ -77,7 +112,12 @@ public class ReservaController {
     }
 
     @PostMapping("/reservas/salvar")
-    public String guardarReserva(@ModelAttribute Reserva reserva, Model model) {
+    public String guardarReserva(@ModelAttribute Reserva reserva, Model model, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+        if (user == null || user.getFuncao().equalsIgnoreCase("Cozinheiro")) {
+            return "redirect:/reservas";
+        }
+
         LocalDate data = reserva.getDataReserva();
         LocalTime hora = reserva.getHoraReserva();
         LocalDate hoje = LocalDate.now();
@@ -92,7 +132,7 @@ public class ReservaController {
                 // Validação de Capacidade da Mesa
                 if (reserva.getNumeroPessoas() > mesaEscolhida.getCapacidade()) {
                     model.addAttribute("erro", "A capacidade da mesa selecionada é insuficiente para o número de pessoas (" + mesaEscolhida.getCapacidade() + " lugares máx).");
-                    carregarAtributosPainel(model);
+                    carregarAtributosPainel(model, true);
                     model.addAttribute("reserva", reserva);
                     model.addAttribute("mesas", mesaRepository.findAll());
                     model.addAttribute("conteudo", "reservas");
@@ -112,7 +152,7 @@ public class ReservaController {
 
             if (!noAlmoco && !noJantar) {
                 model.addAttribute("erro", "Horário fora do funcionamento (Horários permitidos: 12:00 - 15:30 e 19:30 - 23:00)");
-                carregarAtributosPainel(model);
+                carregarAtributosPainel(model, true);
                 model.addAttribute("reserva", reserva);
                 model.addAttribute("mesas", mesaRepository.findAll());
                 model.addAttribute("conteudo", "reservas");
@@ -122,14 +162,14 @@ public class ReservaController {
         // 3. Validar se a data é no passado
         if (data != null && data.isBefore(hoje)) {
             model.addAttribute("erro", "Não é permitido fazer reservas para datas no passado.");
-            carregarAtributosPainel(model);
+            carregarAtributosPainel(model, true);
             model.addAttribute("reserva", reserva);
             model.addAttribute("mesas", mesaRepository.findAll());
             model.addAttribute("conteudo", "reservas");
             return "layout";
         }
 
-        // 4. Validar se a mesa já está ocupada no mesmo período de refeição (Almoço ou Jantar) na mesma data
+        // 4. Validar se a mesa já está ocupada no mesmo período de refeição
         if (reserva.getMesa() != null && reserva.getMesa().getIdMesa() != null && data != null && hora != null) {
             boolean mesmoAlmoco = ehAlmoco(hora);
 
@@ -137,14 +177,13 @@ public class ReservaController {
                 if (r.getDataReserva() == null || !r.getDataReserva().equals(data)) return false;
                 if (r.getMesa() == null || !r.getMesa().getIdMesa().equals(reserva.getMesa().getIdMesa())) return false;
 
-                // Compara se a reserva existente pertence ao mesmo bloco (Almoço vs Jantar)
                 return ehAlmoco(r.getHoraReserva()) == mesmoAlmoco;
             });
 
             if (mesaOcupadaNoTurno) {
                 String turnoNome = mesmoAlmoco ? "Almoço" : "Jantar";
                 model.addAttribute("erro", "A mesa selecionada já se encontra reservada para o turno do " + turnoNome + " nesta data!");
-                carregarAtributosPainel(model);
+                carregarAtributosPainel(model, true);
                 model.addAttribute("mesas", mesaRepository.findAll());
                 model.addAttribute("reserva", reserva);
                 model.addAttribute("conteudo", "reservas");
@@ -152,11 +191,18 @@ public class ReservaController {
             }
         }
 
+        // 5. Guardar a reserva e atualizar o estado da mesa para "Reservado"
         reservaRepository.save(reserva);
+
+        if (reserva.getMesa() != null) {
+            Mesa mesa = reserva.getMesa();
+            mesa.setEstado("Reservado");
+            mesaRepository.save(mesa);
+        }
+
         return "redirect:/reservas";
     }
 
-    // Método auxiliar para determinar se o horário pertence ao Almoço (12:00 - 15:30)
     private boolean ehAlmoco(LocalTime hora) {
         if (hora == null) return false;
         LocalTime inicioAlmoço = LocalTime.of(12, 0);
@@ -164,7 +210,14 @@ public class ReservaController {
         return !hora.isBefore(inicioAlmoço) && !hora.isAfter(fimAlmoço);
     }
 
-    private void carregarAtributosPainel(Model model) {
+    private void carregarAtributosPainel(Model model, boolean temPermissao) {
+        if (!temPermissao) {
+            model.addAttribute("almocoHoje", new ArrayList<>());
+            model.addAttribute("jantarHoje", new ArrayList<>());
+            model.addAttribute("cronogramaFuturo", new ArrayList<>());
+            return;
+        }
+
         LocalDate hoje = LocalDate.now();
         LocalTime inicioAlmoço = LocalTime.of(12, 0);
         LocalTime fimAlmoço = LocalTime.of(15, 30);

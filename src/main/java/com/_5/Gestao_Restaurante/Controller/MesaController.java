@@ -4,14 +4,16 @@ import com._5.Gestao_Restaurante.Repository.MesaRepository;
 import com._5.Gestao_Restaurante.Repository.ReservaRepository;
 import com._5.Gestao_Restaurante.model.Mesa;
 import com._5.Gestao_Restaurante.model.Reserva;
+import com._5.Gestao_Restaurante.model.Utilizador;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.util.Comparator;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Comparator;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,34 +33,19 @@ public class MesaController {
         List<Mesa> mesas = mesaRepository.findAll().stream()
                 .sorted(Comparator.comparing(Mesa::getNumero))
                 .toList();
+
         LocalDate hoje = LocalDate.now();
-        LocalTime horaAtual = LocalTime.now(); // Puxa a hora exata atual
 
-        // Definir os intervalos dos períodos (ajusta se os teus horários forem diferentes)
-        // Almoço: 12:00 até 15:30
-        // Jantar: 19:30 até 23:00 (ou o resto do dia)
-        boolean ePeriodoAlmoço = horaAtual.isAfter(LocalTime.of(11, 0)) && horaAtual.isBefore(LocalTime.of(16, 0));
-
-        // Buscar todas as reservas de hoje
+        // Filtra todas as reservas agendadas para o dia de hoje
         List<Reserva> reservasHoje = reservaRepository.findAll().stream()
-                .filter(r -> r.getDataReserva() != null &&
-                        r.getDataReserva().getYear() == hoje.getYear() &&
-                        r.getDataReserva().getMonth() == hoje.getMonth() &&
-                        r.getDataReserva().getDayOfMonth() == hoje.getDayOfMonth())
+                .filter(r -> r.getDataReserva() != null && r.getDataReserva().equals(hoje))
                 .toList();
 
-        // Filtrar as reservas apenas para o período de refeição atual
+        // Mapeia diretamente todas as mesas que possuem reserva ativa para hoje
         Map<Integer, Reserva> reservasPorMesa = new HashMap<>();
         for (Reserva r : reservasHoje) {
-            if (r.getMesa() != null && r.getHoraReserva() != null) {
-                LocalTime horaReserva = r.getHoraReserva(); // Assume que horaReserva é do tipo LocalTime (ou ajusta se for String)
-
-                boolean ehAlmoçoReserva = horaReserva.isAfter(LocalTime.of(11, 0)) && horaReserva.isBefore(LocalTime.of(16, 0));
-
-                // Se estamos no almoço e a reserva é de almoço, ou se estamos no jantar e a reserva é de jantar:
-                if ((ePeriodoAlmoço && ehAlmoçoReserva) || (!ePeriodoAlmoço && !ehAlmoçoReserva)) {
-                    reservasPorMesa.put(r.getMesa().getIdMesa(), r);
-                }
+            if (r.getMesa() != null && r.getMesa().getIdMesa() != null) {
+                reservasPorMesa.put(r.getMesa().getIdMesa(), r);
             }
         }
 
@@ -66,5 +53,44 @@ public class MesaController {
         model.addAttribute("reservasPorMesa", reservasPorMesa);
         model.addAttribute("conteudo", "mesas");
         return "layout";
+    }
+
+    // --- INTERCECÇÃO DE SEGURANÇA PARA AÇÃO NAS MESAS (EX: CRIAR PEDIDO) ---
+
+    @GetMapping("/pedido/novo")
+    public String tentarCriarPedido(@RequestParam("idMesa") Integer idMesa, HttpSession session, RedirectAttributes redirectAttributes) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Tem de se registar para poder alterar estes dados.");
+            return "redirect:/login";
+        }
+
+        if (user.getFuncao().equals("Cozinheiro")) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Não tem permissão para alterar estes dados.");
+            return "redirect:/mesas";
+        }
+
+        return "redirect:/pedidos/novo?idMesa=" + idMesa;
+    }
+
+    // --- MÉTODOS DE ESCRITA / ALTERAÇÃO PROTEGIDOS ---
+
+    @PostMapping("/salvar")
+    public String salvarMesa(@ModelAttribute Mesa mesa, HttpSession session, RedirectAttributes redirectAttributes) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Tem de se registar para poder alterar estes dados.");
+            return "redirect:/login";
+        }
+
+        if (user.getFuncao().equals("Cozinheiro")) {
+            redirectAttributes.addFlashAttribute("erroPermissao", "Não tem permissão para alterar estes dados.");
+            return "redirect:/mesas";
+        }
+
+        mesaRepository.save(mesa);
+        return "redirect:/mesas";
     }
 }

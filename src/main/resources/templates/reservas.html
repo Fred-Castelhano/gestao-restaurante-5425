@@ -1,138 +1,136 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <title>Gestão de Reservas</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body>
+<div xmlns:th="http://www.thymeleaf.org">
 
-<div class="reservas-container">
-  <h1>Painel de Reservas</h1>
-
-  <!-- FORMULÁRIO DE NOVA RESERVA INTEGRADO -->
-  <div class="form-card">
-    <h3>Registar Nova Reserva</h3>
-
-    <!-- Mensagem de Erro -->
-    <div class="alert-erro" th:if="${erro}" th:text="${erro}"></div>
-
-    <form th:action="@{/reservas/salvar}" th:object="${reserva}" method="post" class="reserva-form">
-      <div>
-        <label>Nome do Cliente:</label>
-        <input type="text" th:field="*{nomeCliente}" required>
-      </div>
-      <div>
-        <label>Contacto:</label>
-        <input type="text" th:field="*{contacto}" required>
-      </div>
-      <div>
-        <label>Número de Pessoas:</label>
-        <input type="number" th:field="*{numeroPessoas}" min="1" required>
-      </div>
-      <div>
-        <label>Atribuir Mesa:</label>
-        <select th:field="*{mesa}">
-          <option value="">-- Selecionar Mesa --</option>
-          <option th:each="m : ${mesas}" th:value="${m.idMesa}" th:text="'Mesa ' + ${m.numero} + ' (' + ${m.capacidade} + ' lugares)'"></option>
-        </select>
-      </div>
-      <div>
-        <label>Data da Reserva:</label>
-        <input type="date" th:field="*{dataReserva}" required>
-      </div>
-      <div>
-        <label>Hora da Reserva:</label>
-        <input type="time" th:field="*{horaReserva}" required>
-      </div>
-      <div class="form-submit">
-        <button type="submit" class="btn-guardar">Guardar Reserva</button>
-      </div>
-    </form>
+  <!-- Mensagem de Erro de Permissões (Caso o utilizador não tenha acesso) -->
+  <div th:if="${erroPermissao}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;">
+    <span th:text="${erroPermissao}">Erro de permissão</span>
   </div>
 
-  <!-- TURNOS DE HOJE -->
-  <h2>Reservas para Hoje</h2>
-  <div class="turnos-wrapper">
-    <div class="turno-card">
-      <h3>☀️ Almoço (12:00 - 15:30)</h3>
-      <ul th:if="${not #lists.isEmpty(almocoHoje)}">
-        <li th:each="r : ${almocoHoje}">
-          <strong th:text="${r.horaReserva}">14:15</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
+  <div class="reservas-container">
+    <h1>Painel de Reservas</h1>
 
-          <!-- Botão de Confirmar Chegada -->
-          <a th:href="@{/reservas/chegada/{id}(id=${r.idReserva})}"
-             style="color: #28a745; margin-left: 10px; text-decoration: none; font-weight: bold;"
-             onclick="return confirm('Confirmar a chegada deste cliente e ocupar a mesa?');">✅ Chegada</a>
+    <!-- FORMULÁRIO DE NOVA RESERVA INTEGRADO -->
+    <div class="form-card">
+      <h3>Registar Nova Reserva</h3>
 
-          <!-- Botão de Cancelar -->
-          <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}"
-             style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;"
-             onclick="return confirm('Tem a certeza que quer cancelar esta reserva?');">❌ Cancelar</a>
-        </li>
-      </ul>
-      <p th:if="${#lists.isEmpty(almocoHoje)}" class="sem-reservas">Sem reservas para o almoço de hoje.</p>
+      <!-- Mensagem de Erro -->
+      <div class="alert-erro" th:if="${erro}" th:text="${erro}"></div>
+
+      <form th:action="@{/reservas/salvar}" th:object="${reserva}" method="post" class="reserva-form">
+        <div>
+          <label>Nome do Cliente:</label>
+          <input type="text" th:field="*{nomeCliente}" required>
+        </div>
+        <div>
+          <label>Contacto:</label>
+          <input type="text" th:field="*{contacto}" required>
+        </div>
+        <div>
+          <label>Número de Pessoas:</label>
+          <input type="number" th:field="*{numeroPessoas}" min="1" required>
+        </div>
+        <div>
+          <label>Atribuir Mesa:</label>
+          <!-- CORREÇÃO APLICADA AQUI: th:field apunta para mesa.idMesa -->
+          <select th:field="*{mesa.idMesa}">
+            <option value="">-- Selecionar Mesa --</option>
+            <option th:each="m : ${mesas}" th:value="${m.idMesa}" th:text="'Mesa ' + ${m.numero} + ' (' + ${m.capacidade} + ' lugares)'"></option>
+          </select>
+        </div>
+        <div>
+          <label>Data da Reserva:</label>
+          <input type="date" th:field="*{dataReserva}" required>
+        </div>
+        <div>
+          <label>Hora da Reserva:</label>
+          <input type="time" th:field="*{horaReserva}" required>
+        </div>
+        <div class="form-submit">
+          <button type="submit" class="btn-guardar">Guardar Reserva</button>
+        </div>
+      </form>
     </div>
 
-    <div class="turno-card">
-      <h3>🌙 Jantar (19:30 - 23:00)</h3>
-      <ul th:if="${not #lists.isEmpty(jantarHoje)}">
-        <li th:each="r : ${jantarHoje}">
-          <strong th:text="${r.horaReserva}">20:30</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
+    <!-- TURNOS DE HOJE -->
+    <h2>Reservas para Hoje</h2>
+    <div class="turnos-wrapper">
+      <div class="turno-card">
+        <h3>☀️ Almoço (12:00 - 15:30)</h3>
+        <ul th:if="${not #lists.isEmpty(almocoHoje)}">
+          <li th:each="r : ${almocoHoje}">
+            <strong th:text="${r.horaReserva}">14:15</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
 
-          <!-- Botão de Confirmar Chegada -->
-          <a th:href="@{/reservas/chegada/{id}(id=${r.idReserva})}"
-             style="color: #28a745; margin-left: 10px; text-decoration: none; font-weight: bold;"
-             onclick="return confirm('Confirmar a chegada deste cliente e ocupar a mesa?');">✅ Chegada</a>
+            <!-- Botão de Confirmar Chegada -->
+            <a th:href="@{/reservas/chegada/{id}(id=${r.idReserva})}"
+               style="color: #28a745; margin-left: 10px; text-decoration: none; font-weight: bold;"
+               onclick="return confirm('Confirmar a chegada deste cliente e ocupar a mesa?');">✅ Chegada</a>
 
-          <!-- Botão de Cancelar -->
-          <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}"
-             style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;"
-             onclick="return confirm('Tem a certeza que quer cancelar esta reserva?');">❌ Cancelar</a>
-        </li>
-      </ul>
-      <p th:if="${#lists.isEmpty(jantarHoje)}" class="sem-reservas">Sem reservas para o jantar de hoje.</p>
+            <!-- Botão de Cancelar -->
+            <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}"
+               style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;"
+               onclick="return confirm('Tem a certeza que quer cancelar esta reserva?');">❌ Cancelar</a>
+          </li>
+        </ul>
+        <p th:if="${#lists.isEmpty(almocoHoje)}" class="sem-reservas">Sem reservas para o almoço de hoje.</p>
+      </div>
+
+      <div class="turno-card">
+        <h3>🌙 Jantar (19:30 - 23:00)</h3>
+        <ul th:if="${not #lists.isEmpty(jantarHoje)}">
+          <li th:each="r : ${jantarHoje}">
+            <strong th:text="${r.horaReserva}">20:30</strong> - <span th:text="${r.nomeCliente}">Nome</span> (<span th:text="${r.numeroPessoas}">2</span> pessoas) — Mesa: <span th:text="${r.mesa != null ? r.mesa.numero : 'Por atribuir'}"></span>
+
+            <!-- Botão de Confirmar Chegada -->
+            <a th:href="@{/reservas/chegada/{id}(id=${r.idReserva})}"
+               style="color: #28a745; margin-left: 10px; text-decoration: none; font-weight: bold;"
+               onclick="return confirm('Confirmar a chegada deste cliente e ocupar a mesa?');">✅ Chegada</a>
+
+            <!-- Botão de Cancelar -->
+            <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}"
+               style="color: #dc3545; margin-left: 10px; text-decoration: none; font-weight: bold;"
+               onclick="return confirm('Tem a certeza que quer cancelar esta reserva?');">❌ Cancelar</a>
+          </li>
+        </ul>
+        <p th:if="${#lists.isEmpty(jantarHoje)}" class="sem-reservas">Sem reservas para o jantar de hoje.</p>
+      </div>
+    </div>
+
+    <!-- CRONOGRAMA PRÓXIMAS 4 SEMANAS -->
+    <h2>Cronograma (Próximas 4 Semanas)</h2>
+    <table class="tabela-cronograma">
+      <thead>
+      <tr>
+        <th>Data</th>
+        <th>Hora</th>
+        <th>Cliente</th>
+        <th>Contacto</th>
+        <th>Pessoas</th>
+        <th>Mesa</th>
+        <th>Ações</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="r : ${cronogramaFuturo}">
+        <td th:text="${r.dataReserva}">2026-07-30</td>
+        <td th:text="${r.horaReserva}">20:00</td>
+        <td th:text="${r.nomeCliente}">Nome</td>
+        <td th:text="${r.contacto}">Contacto</td>
+        <td th:text="${r.numeroPessoas}">2</td>
+        <td th:text="${r.mesa != null ? 'Mesa ' + r.mesa.numero : 'Sem mesa'}">Mesa</td>
+        <td>
+          <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;"
+             onclick="return confirm('Tens a certeza que pretendes cancelar esta reserva?');">Cancelar
+          </a>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(cronogramaFuturo)}">
+        <td colspan="7" class="tabela-vazia">Não existem reservas agendadas para as próximas semanas.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="voltar-link">
+      <a th:href="@{/mesas}">← Voltar ao Ecrã de Mesas</a>
     </div>
   </div>
 
-  <!-- CRONOGRAMA PRÓXIMAS 4 SEMANAS -->
-  <h2>Cronograma (Próximas 4 Semanas)</h2>
-  <table class="tabela-cronograma">
-    <thead>
-    <tr>
-      <th>Data</th>
-      <th>Hora</th>
-      <th>Cliente</th>
-      <th>Contacto</th>
-      <th>Pessoas</th>
-      <th>Mesa</th>
-      <th>Ações</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="r : ${cronogramaFuturo}">
-      <td th:text="${r.dataReserva}">2026-07-30</td>
-      <td th:text="${r.horaReserva}">20:00</td>
-      <td th:text="${r.nomeCliente}">Nome</td>
-      <td th:text="${r.contacto}">Contacto</td>
-      <td th:text="${r.numeroPessoas}">2</td>
-      <td th:text="${r.mesa != null ? 'Mesa ' + r.mesa.numero : 'Sem mesa'}">Mesa</td>
-      <td>
-        <a th:href="@{/reservas/cancelar/{id}(id=${r.idReserva})}" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;"
-           onclick="return confirm('Tens a certeza que pretendes cancelar esta reserva?');">Cancelar
-        </a>
-      </td>
-    </tr>
-    <tr th:if="${#lists.isEmpty(cronogramaFuturo)}">
-      <td colspan="7" class="tabela-vazia">Não existem reservas agendadas para as próximas semanas.</td>
-    </tr>
-    </tbody>
-  </table>
-
-  <div class="voltar-link">
-    <a th:href="@{/mesas}">← Voltar ao Ecrã de Mesas</a>
-  </div>
 </div>
-
-</body>
-</html>

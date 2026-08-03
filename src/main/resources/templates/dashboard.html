@@ -12,20 +12,23 @@
     <a th:href="@{/reservas}" style="background-color: #064e3b; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">+ Nova Reserva</a>
   </div>
 
-  <!-- 4 Cartões de Métricas no Topo -->
+  <!-- 4 Cartões de Métricas no Topo (Com Mesas Ocupadas e Reservadas Separadas) -->
   <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
       <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 8px;">Reservas de hoje</div>
       <div style="font-size: 1.8rem; font-weight: bold; color: #111827;" th:text="${reservasHoje}">0</div>
     </div>
+
     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
       <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 8px;">Mesas ocupadas</div>
-      <div style="font-size: 1.8rem; font-weight: bold; color: #111827;" th:text="${mesasOcupadas}">0</div>
+      <div style="font-size: 1.8rem; font-weight: bold; color: #dc2626;" th:text="${mesasOcupadas}">0</div>
     </div>
+
     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-      <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 8px;">Pedidos ativos</div>
-      <div style="font-size: 1.8rem; font-weight: bold; color: #111827;" th:text="${pedidosAtivos}">0</div>
+      <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 8px;">Mesas reservadas</div>
+      <div style="font-size: 1.8rem; font-weight: bold; color: #d97706;" th:text="${mesasReservadas}">0</div>
     </div>
+
     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
       <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 8px;">Vendas do dia</div>
       <div style="font-size: 1.8rem; font-weight: bold; color: #111827;" th:text="${vendasDia} + '€'">0€</div>
@@ -92,9 +95,9 @@
           <span style="font-weight: 600;" th:text="'Mesa ' + ${mesa.numero}">Mesa 1</span>
           <span style="color: #6b7280; font-size: 0.85rem;" th:text="'Capacidade: ' + ${mesa.capacidade}">Capacidade: 4</span>
 
-          <!-- Cores dinâmicas (insensível a maiúsculas/minúsculas) -->
+          <!-- Cor e texto dinâmico atualizados para suportar Livre, Ocupada e Reservado -->
           <span style="font-size: 0.85rem; font-weight: 600;"
-                th:style="${#strings.toUpperCase(mesa.estado) == 'OCUPADA' ? 'color: #dc2626;' : (#strings.toUpperCase(mesa.estado) == 'LIVRE' ? 'color: #16a34a;' : 'color: #ca8a04;')}"
+                th:style="${#strings.toUpperCase(mesa.estado) == 'OCUPADA'} ? 'color: #dc2626;' : (${#strings.toUpperCase(mesa.estado) == 'LIVRE'} ? 'color: #16a34a;' : 'color: #ca8a04;')"
                 th:text="${mesa.estado}">LIVRE</span>
         </div>
       </div>

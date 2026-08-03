@@ -4,10 +4,12 @@ import com._5.Gestao_Restaurante.model.ItemPedido;
 import com._5.Gestao_Restaurante.model.Mesa;
 import com._5.Gestao_Restaurante.model.Pedido;
 import com._5.Gestao_Restaurante.model.Prato;
+import com._5.Gestao_Restaurante.model.Utilizador;
 import com._5.Gestao_Restaurante.Repository.MesaRepository;
 import com._5.Gestao_Restaurante.Repository.PedidoRepository;
 import com._5.Gestao_Restaurante.Repository.ItemPedidoRepository;
 import com._5.Gestao_Restaurante.Repository.PratoRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,13 +38,25 @@ public class PedidoController {
     @Autowired
     private ItemPedidoRepository itemPedidoRepository;
 
-    // 1. Mostrar painel da cozinha (KDS) listando cada item individualmente em cartões próprios
+    // 1. Mostrar painel da cozinha (KDS) com mensagem de acesso negado se não tiver permissão
     @GetMapping("/pedidos/cozinha")
-    public String verCozinha(Model model) {
-        // Vai buscar diretamente os itens individuais com base no estado deles
-        List<ItemPedido> listaEspera = itemPedidoRepository.findByEstado("PENDENTE");
-        List<ItemPedido> listaPreparacao = itemPedidoRepository.findByEstado("PREPARADO");
-        List<ItemPedido> listaPronto = itemPedidoRepository.findByEstado("PRONTO");
+    public String verCozinha(Model model, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        boolean temPermissao = user != null && (
+                user.getFuncao().equalsIgnoreCase("Gerente") ||
+                        user.getFuncao().equalsIgnoreCase("Cozinheiro") ||
+                        user.getFuncao().equalsIgnoreCase("Administrador")
+        );
+
+        if (!temPermissao) {
+            model.addAttribute("erroPermissao", "Acesso Negado: Não tem permissões para aceder ao Painel da Cozinha.");
+        }
+
+        // Se tiver permissão busca os dados reais, senão passa listas vazias
+        List<ItemPedido> listaEspera = temPermissao ? itemPedidoRepository.findByEstado("PENDENTE") : new ArrayList<>();
+        List<ItemPedido> listaPreparacao = temPermissao ? itemPedidoRepository.findByEstado("PREPARADO") : new ArrayList<>();
+        List<ItemPedido> listaPronto = temPermissao ? itemPedidoRepository.findByEstado("PRONTO") : new ArrayList<>();
 
         model.addAttribute("emEspera", listaEspera);
         model.addAttribute("emPreparacao", listaPreparacao);
@@ -53,19 +66,29 @@ public class PedidoController {
         model.addAttribute("countPreparacao", listaPreparacao.size());
         model.addAttribute("countPronto", listaPronto.size());
 
-        return "cozinha-pedidos";
+        // Configuração do Layout Geral
+        model.addAttribute("conteudo", "cozinha-pedidos");
+        model.addAttribute("menuAtivo", "pedidos");
+        model.addAttribute("tituloPage", "Painel da Cozinha - Restaurante App");
+
+        return "layout";
     }
 
-    // 2. Formulário para criar pedido para uma mesa específica
+    // 2. Formulário para criar pedido (Garçom / Gerente / Admin)
     @GetMapping("/pedidos/novo")
-    public String novoPedidoForm(@RequestParam("idMesa") Integer idMesa, Model model) {
+    public String novoPedidoForm(@RequestParam("idMesa") Integer idMesa, Model model, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        // Se for Cozinheiro, não deve criar pedidos de mesa
+        if (user != null && user.getFuncao().equalsIgnoreCase("Cozinheiro")) {
+            return "redirect:/pedidos/cozinha";
+        }
+
         Mesa mesa = mesaRepository.findById(idMesa).orElse(null);
         model.addAttribute("mesa", mesa);
         model.addAttribute("pratos", pratoRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "idPrato")));
 
         double totalAcumulado = 0.0;
-
-        // Procura todos os pedidos ativos da mesa e soma apenas os itens que NÃO estão concluídos
         List<Pedido> todosPedidos = pedidoRepository.findAll();
 
         for (Pedido p : todosPedidos) {
@@ -73,7 +96,6 @@ public class PedidoController {
                 if (p.getItens() != null) {
                     for (ItemPedido item : p.getItens()) {
                         String estadoItem = item.getEstado();
-                        // Só soma se o item individual ainda não estiver concluído
                         if (estadoItem == null || !estadoItem.trim().equalsIgnoreCase("CONCLUIDO")) {
                             String nomeProd = item.getNomeProduto();
                             if (nomeProd != null) {
@@ -103,21 +125,24 @@ public class PedidoController {
         return "novo-pedido";
     }
 
-    // 3. Guardar o pedido e os itens individualmente com validação rigorosa de stock
+    // 3. Guardar o pedido (Cozinheiros não criam pedidos de mesa)
     @PostMapping("/pedidos/guardar")
     public String guardarPedido(@RequestParam("idMesa") Integer idMesa,
                                 @RequestParam Map<String, String> allParams,
-                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes,
+                                HttpSession session) {
 
-        System.out.println("--> A tentar guardar pedido para a mesa ID: " + idMesa);
-
-        Mesa mesa = mesaRepository.findById(idMesa).orElse(null);
-        if (mesa == null) {
-            System.out.println("--> ERRO: Mesa com ID " + idMesa + " não foi encontrada!");
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+        if (user == null || user.getFuncao().equalsIgnoreCase("Cozinheiro")) {
             return "redirect:/pedidos/cozinha";
         }
 
-        // --- PASSO 1: PRÉ-VALIDAÇÃO DE STOCK DE TODOS OS ITENS ---
+        Mesa mesa = mesaRepository.findById(idMesa).orElse(null);
+        if (mesa == null) {
+            return "redirect:/pedidos/cozinha";
+        }
+
+        // Pré-validação de stock
         for (Map.Entry<String, String> entry : allParams.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
@@ -135,13 +160,11 @@ public class PedidoController {
                         if (prato != null) {
                             int stockAtual = (prato.getQuantidade() != null) ? prato.getQuantidade() : 0;
 
-                            // Validação 1: Item totalmente indisponível
                             if (stockAtual <= 0) {
                                 redirectAttributes.addFlashAttribute("erro", "Item indisponível: " + prato.getNome());
                                 return "redirect:/pedidos/novo?idMesa=" + idMesa;
                             }
 
-                            // Validação 2: Stock insuficiente para a quantidade pedida
                             if (quantidadeSolicitada > stockAtual) {
                                 redirectAttributes.addFlashAttribute("erro", "Insuficiente stock para " + prato.getNome() + " (" + stockAtual + " disponíveis).");
                                 return "redirect:/pedidos/novo?idMesa=" + idMesa;
@@ -152,7 +175,6 @@ public class PedidoController {
             }
         }
 
-        // --- PASSO 2: GUARDAR PEDIDO E DESCONTAR DO STOCK ---
         Pedido pedido = new Pedido();
         pedido.setMesa(mesa);
         pedido.setDataHora(LocalDateTime.now());
@@ -176,11 +198,9 @@ public class PedidoController {
                         Prato prato = pratoRepository.findById(idPrato).orElse(null);
 
                         if (prato != null) {
-                            // Atualiza o stock na base de dados
                             prato.setQuantidade(prato.getQuantidade() - quantidadeTotal);
                             pratoRepository.save(prato);
 
-                            // Cria o registo individual (quantidade = 1) para cada unidade pedida
                             for (int i = 0; i < quantidadeTotal; i++) {
                                 ItemPedido item = new ItemPedido();
                                 item.setPedido(pedido);
@@ -202,9 +222,15 @@ public class PedidoController {
 
         return "redirect:/pedidos/cozinha";
     }
-    // 4. Mover o pedido para o próximo estado
+
+    // 4. Mover o pedido geral (Apenas Administrador e Gerente)
     @PostMapping("/pedidos/avancar/{id}")
-    public String avancarEstadoPedido(@PathVariable("id") Long idPedido) {
+    public String avancarEstadoPedido(@PathVariable("id") Long idPedido, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+        if (user == null || (!user.getFuncao().equalsIgnoreCase("Administrador") && !user.getFuncao().equalsIgnoreCase("Gerente"))) {
+            return "redirect:/pedidos/cozinha";
+        }
+
         Pedido pedido = pedidoRepository.findById(idPedido).orElse(null);
         if (pedido != null) {
             String estadoAtual = pedido.getEstado() != null ? pedido.getEstado().trim() : "";
@@ -221,9 +247,16 @@ public class PedidoController {
         return "redirect:/pedidos/cozinha";
     }
 
-    // 5. Avançar o estado do item individual sequencialmente
+    // 5. Avançar o estado do item individual (Restrito a Cozinheiro, Gerente e Administrador)
     @PostMapping("/pedidos/item/toggle/{id}")
-    public String toggleItemPronto(@PathVariable("id") Integer idItem) {
+    public String toggleItemPronto(@PathVariable("id") Integer idItem, HttpSession session) {
+        Utilizador user = (Utilizador) session.getAttribute("utilizadorLogado");
+
+        // Garçons NÃO podem mexer na cozinha
+        if (user == null || user.getFuncao().equalsIgnoreCase("Garçom")) {
+            return "redirect:/pedidos/cozinha";
+        }
+
         ItemPedido item = itemPedidoRepository.findById(idItem).orElse(null);
         if (item != null) {
             String estadoAtual = item.getEstado() != null ? item.getEstado().trim() : "";
@@ -233,111 +266,10 @@ public class PedidoController {
             } else if (estadoAtual.equalsIgnoreCase("PREPARADO")) {
                 item.setEstado("PRONTO");
             } else if (estadoAtual.equalsIgnoreCase("PRONTO")) {
-                item.setEstado("CONCLUIDO"); // Ou podes apagar o item se preferires: itemPedidoRepository.delete(item);
+                item.setEstado("CONCLUIDO");
             }
             itemPedidoRepository.save(item);
         }
         return "redirect:/pedidos/cozinha";
-    }
-
-    // 6. Redirecionar do formulário de pedido para a página de pagamentos
-    @GetMapping("/pedidos/pagamento")
-    public String realizarPagamento(@RequestParam("idMesa") Integer idMesa) {
-        return "redirect:/pedidos/pagamentos";
-    }
-
-    // 7. Página de Pagamentos (Abordagem Direta e Infalível por ID de Mesa)
-    @GetMapping("/pedidos/pagamentos")
-    public String paginaPagamentos(Model model) {
-        List<Mesa> mesas = mesaRepository.findAll();
-        List<ItemPedido> todosItens = itemPedidoRepository.findAll();
-
-        Map<Integer, List<ItemPedido>> itensPorMesa = new LinkedHashMap<>();
-        Map<Integer, Double> totaisPorMesa = new LinkedHashMap<>();
-
-        for (Mesa mesa : mesas) {
-            double totalMesa = 0.0;
-            List<ItemPedido> itensAtivosMesa = new ArrayList<>();
-
-            for (ItemPedido item : todosItens) {
-                if (item.getPedido() != null && item.getPedido().getMesa() != null) {
-                    Integer idMesaPedido = item.getPedido().getMesa().getIdMesa();
-
-                    if (idMesaPedido != null && idMesaPedido.equals(mesa.getIdMesa())) {
-
-                        // Verifica o estado do pedido pai (ignora se estiver concluído de qualquer forma)
-                        String estadoPedido = item.getPedido().getEstado();
-                        boolean pedidoConcluido = estadoPedido != null &&
-                                estadoPedido.toLowerCase().replace("ú", "u").contains("concluido");
-
-                        // Verifica o estado do item individual
-                        String estadoItem = item.getEstado();
-                        boolean itemConcluido = estadoItem != null &&
-                                estadoItem.toLowerCase().replace("ú", "u").contains("concluido");
-
-                        // Só adiciona se nem o pedido nem o item estiverem concluídos
-                        if (!pedidoConcluido && !itemConcluido) {
-                            itensAtivosMesa.add(item);
-
-                            Prato prato = pratoRepository.findByNome(item.getNomeProduto());
-                            if (prato == null && item.getNomeProduto() != null) {
-                                for (Prato pBD : pratoRepository.findAll()) {
-                                    if (pBD.getNome() != null && pBD.getNome().trim().equalsIgnoreCase(item.getNomeProduto().trim())) {
-                                        prato = pBD;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (prato != null && prato.getPreco() != null) {
-                                totalMesa += (prato.getPreco().doubleValue() * item.getQuantidade());
-                            }
-                        }
-                    }
-                }
-            }
-
-            itensPorMesa.put(mesa.getIdMesa(), itensAtivosMesa);
-            totaisPorMesa.put(mesa.getIdMesa(), totalMesa);
-        }
-
-        model.addAttribute("mesas", mesas);
-        model.addAttribute("itensPorMesa", itensPorMesa);
-        model.addAttribute("totaisPorMesa", totaisPorMesa);
-
-        return "pagamentos";
-    }
-
-    // 8. Concluir o pagamento de uma mesa (atualiza os pedidos/itens para CONCLUIDO e liberta a mesa)
-    @PostMapping("/pedidos/concluir-pagamento")
-    public String concluirPagamento(@RequestParam("idMesa") Integer idMesa) {
-        // Procura todos os pedidos da mesa e marca-os como concluídos
-        List<Pedido> todosPedidos = pedidoRepository.findAll();
-
-        for (Pedido p : todosPedidos) {
-            if (p.getMesa() != null && p.getMesa().getIdMesa().equals(idMesa)) {
-                String estadoPedido = p.getEstado();
-                if (estadoPedido == null || !estadoPedido.trim().equalsIgnoreCase("CONCLUIDO")) {
-                    p.setEstado("CONCLUIDO");
-
-                    // Opcional: Se também quiseres marcar os itens individuais como concluídos
-                    if (p.getItens() != null) {
-                        for (ItemPedido item : p.getItens()) {
-                            item.setEstado("CONCLUIDO");
-                        }
-                    }
-                    pedidoRepository.save(p);
-                }
-            }
-        }
-
-        // Opcional: Atualizar o estado da mesa para "Livre", caso tenhas esse campo na entidade Mesa
-        Mesa mesa = mesaRepository.findById(idMesa).orElse(null);
-        if (mesa != null) {
-            mesa.setEstado("Livre");
-            mesaRepository.save(mesa);
-        }
-
-        return "redirect:/pedidos/pagamentos";
     }
 }

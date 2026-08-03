@@ -8,27 +8,27 @@
 <body>
 
 <div class="container" style="max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-    <h2 style="color: #d9534f; text-align: center; margin-bottom: 20px;">Registar Novo Utilizador</h2>
+    <h2 style="color: #064e3b; text-align: center; margin-bottom: 20px;">Registar Novo Utilizador</h2>
 
     <form th:action="@{/utilizadores}" th:object="${utilizador}" method="post">
         <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Nome Completo:</label>
-            <input type="text" th:field="*{nomeCompleto}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="text" th:field="*{nomeCompleto}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
 
         <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Email:</label>
-            <input type="email" th:field="*{email}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="email" th:field="*{email}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
 
         <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Palavra-passe:</label>
-            <input type="password" th:field="*{password}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="password" th:field="*{password}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
 
         <div style="margin-bottom: 20px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Função:</label>
-            <select th:field="*{funcao}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+            <select th:field="*{funcao}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background-color: white; box-sizing: border-box;">
                 <option value="" disabled selected>Selecione a função</option>
                 <option value="Garçom">Garçom</option>
                 <option value="Gerente">Gerente</option>
@@ -37,9 +37,14 @@
             </select>
         </div>
 
-        <div style="display: flex; gap: 10px;">
-            <button type="submit" style="flex: 1; padding: 12px; background-color: #d9534f; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Guardar</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button type="submit" style="flex: 1; padding: 12px; background-color: #047857; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Guardar</button>
             <a th:href="@{/utilizadores}" style="flex: 1; text-align: center; padding: 12px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">Cancelar</a>
+        </div>
+
+        <!-- Link para quem já tem conta -->
+        <div style="text-align: center; margin-top: 15px; font-size: 14px; color: #4b5563;">
+            Se já tem conta, <a th:href="@{/login}" style="color: #047857; text-decoration: none; font-weight: bold;">faça login aqui</a>.
         </div>
     </form>
 </div>

@@ -9,6 +9,11 @@
 
 <div class="container" style="max-width: 1100px;">
 
+  <!-- Mensagem de Erro de Permissões (Nova Adição) -->
+  <div th:if="${erroPermissao}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;">
+    <span th:text="${erroPermissao}">Erro de permissão</span>
+  </div>
+
   <!-- Mensagem de Erro Dinâmica (Validação de Stock ao Pedir) -->
   <div th:if="${erro}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;" th:text="${erro}">
     Mensagem de erro

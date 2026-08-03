@@ -1,68 +1,88 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestão de Pagamentos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+<div xmlns:th="http://www.thymeleaf.org">
 
-<div class="container my-5">
-    <h1 class="text-center mb-4">Caixa / Pagamentos por Mesa</h1>
-
-    <div class="text-end mb-3">
-        <a href="/pedidos/cozinha" class="btn btn-secondary">Voltar à Cozinha</a>
+    <!-- Mensagem de Erro de Permissões -->
+    <div th:if="${erroPermissao}" style="background-color: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #fecaca; font-weight: 600;">
+        <span th:text="${erroPermissao}">Erro de permissão</span>
     </div>
 
-    <div class="row">
-        <!-- Iterar sobre cada mesa -->
-        <div class="col-md-4 mb-4" th:each="mesa : ${mesas}">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0" th:text="'Mesa ' + ${mesa.idMesa}">Mesa</h5>
-                    <span class="badge bg-light text-dark" th:text="${mesa.estado}">Livre</span>
+    <div class="container my-5" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="margin: 0; font-size: 1.8rem; font-weight: bold; color: #222;">Caixa / Pagamentos por Mesa</h1>
+            <a href="/pedidos/cozinha" class="btn btn-secondary" style="background: #6c757d; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold;">Voltar à Cozinha</a>
+        </div>
+
+        <!-- Alerta de erro caso falte stock -->
+        <div th:if="${erro}" class="alert alert-danger" th:text="${erro}" style="background: #f8d7da; color: #842029; padding: 12px; border-radius: 6px; margin-bottom: 20px;"></div>
+
+        <!-- Grelha de cartões idêntica ao design original -->
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+
+            <!-- Iterar sobre cada mesa -->
+            <div th:each="mesa : ${mesas}" style="flex: 1; min-width: 280px; max-width: calc(33.333% - 14px); background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">
+
+                <!-- Cabeçalho do Cartão -->
+                <div style="background-color: #0d6efd; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <h5 style="margin: 0; font-size: 1.1rem;" th:text="'Mesa ' + ${mesa.idMesa}">Mesa</h5>
+                    <span style="background: white; color: #333; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;" th:text="${mesa.estado}">Livre</span>
                 </div>
 
-                <div class="card-body d-flex flex-column justify-content-between">
+                <!-- Corpo do Cartão -->
+                <div style="padding: 15px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between;">
                     <div>
-                        <h6 class="text-muted mb-3">Itens Consumidos:</h6>
+                        <h6 style="color: #666; font-size: 0.9rem; margin-top: 0; margin-bottom: 10px;">Itens Consumidos:</h6>
 
-                        <!-- Lista de itens da mesa -->
-                        <ul class="list-group mb-3">
-                            <li class="list-group-item d-flex justify-content-between align-items-center"
-                                th:each="item : ${itensPorMesa.get(mesa.idMesa)}">
-                                <span th:text="${item.nomeProduto}">Produto</span>
-                                <span class="badge bg-secondary" th:text="${item.quantidade}">1</span>
+                        <!-- Lista de itens -->
+                        <ul style="list-style: none; padding: 0; margin: 0 0 15px 0;">
+                            <li th:each="item : ${itensPorMesa.get(mesa.idMesa)}" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem;">
+                                <div>
+                                    <span th:text="${item.nomeProduto}" style="font-weight: 500;">Produto</span>
+                                    <span style="background: #e4e6eb; color: #333; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 4px;" th:text="${item.quantidade}">1</span>
+                                </div>
+                                <form th:action="@{/pedidos/pagamentos/remover-item/{id}(id=${item.idItem})}" method="post" style="margin:0;">
+                                    <button type="submit" title="Remover item" style="background: none; border: 1px solid #dc3545; color: #dc3545; cursor: pointer; border-radius: 3px; padding: 1px 5px; font-size: 0.75rem;">✕</button>
+                                </form>
                             </li>
-                            <!-- Mensagem caso esteja vazio -->
-                            <li class="list-group-item text-muted text-center"
-                                th:if="${#lists.isEmpty(itensPorMesa.get(mesa.idMesa))}">
+
+                            <li th:if="${#lists.isEmpty(itensPorMesa.get(mesa.idMesa))}" style="text-align: center; color: #888; font-style: italic; padding: 10px 0; font-size: 0.9rem;">
                                 Sem pedidos pendentes
                             </li>
                         </ul>
+
+                        <!-- Adicionar Prato -->
+                        <form th:action="@{/pedidos/pagamentos/adicionar-item}" method="post" style="background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #eee; margin-bottom: 15px;">
+                            <input type="hidden" name="idMesa" th:value="${mesa.idMesa}" />
+                            <div style="display: flex; gap: 5px;">
+                                <select name="idPrato" required style="flex: 1; padding: 5px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px;">
+                                    <option value="" disabled selected>Adicionar prato...</option>
+                                    <option th:each="prato : ${pratos}" th:value="${prato.idPrato}" th:text="${prato.nome + ' (' + prato.preco + '€)'}"></option>
+                                </select>
+                                <input type="number" name="quantidade" value="1" min="1" required style="width: 45px; padding: 5px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px; text-align: center;" />
+                                <button type="submit" style="background: #198754; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer;">+</button>
+                            </div>
+                        </form>
                     </div>
 
-                    <!-- Valor total e botão de pagamento -->
+                    <!-- Secção de Total e Pagamento em baixo -->
                     <div>
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Total:</h5>
-                            <h4 class="text-success mb-0" th:text="${#numbers.formatDecimal(totaisPorMesa.get(mesa.idMesa), 1, 2) + ' €'}">0.00 €</h4>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-weight: bold; font-size: 1rem;">Total:</span>
+                            <span style="font-weight: bold; font-size: 1.1rem; color: #198754;" th:text="${#numbers.formatDecimal(totaisPorMesa.get(mesa.idMesa), 1, 2) + ' €'}">0,00 €</span>
                         </div>
 
-                        <form th:action="@{/pedidos/pagamento}" method="get">
+                        <form th:action="@{/pedidos/concluir-pagamento}" method="post">
                             <input type="hidden" name="idMesa" th:value="${mesa.idMesa}" />
-                            <button type="submit" class="p-2 btn btn-success w-100"
-                                    th:disabled="${#lists.isEmpty(itensPorMesa.get(mesa.idMesa))}">
-                                Efetuar Pagamento
+                            <button type="submit" th:disabled="${#lists.isEmpty(itensPorMesa.get(mesa.idMesa))}"
+                                    style="width: 100%; padding: 10px; background-color: #198754; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                                Concluir Pagamento
                             </button>
                         </form>
                     </div>
+
                 </div>
             </div>
+
         </div>
     </div>
 </div>
-
-</body>
-</html>

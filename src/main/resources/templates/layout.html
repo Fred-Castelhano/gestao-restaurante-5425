@@ -5,7 +5,6 @@
     <title th:text="${tituloPage} ?: 'Restaurante App'">Restaurante App</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
-        /* Layout Geral com Sidebar */
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,11 +15,11 @@
         }
         .sidebar {
             width: 260px;
-            background-color: #064e3b; /* Verde escuro elegante */
+            background-color: #064e3b;
             color: white;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: space-between; /* Mantém a barra verde esticada de cima a baixo */
             padding: 20px;
             box-sizing: border-box;
         }
@@ -49,15 +48,86 @@
             background-color: #047857;
             color: white;
         }
-        .sidebar-user {
+
+        /* Aqui está o truque: mantém a barra verde em baixo, mas levanta o retângulo do utilizador */
+        .sidebar-footer {
+            margin-bottom: 25px; /* Puxa o cartão mais para cima */
+            position: relative;
+        }
+        .user-dropdown-container {
             background-color: #047857;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
         }
+        .user-dropdown-container:hover {
+            background-color: #065f46;
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background-color: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .user-name {
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-role {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 11px;
+        }
+        .user-arrow {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        .user-menu-dropdown {
+            position: absolute;
+            bottom: 60px; /* Abre o menu de logout para cima do cartão */
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            overflow: hidden;
+            z-index: 100;
+        }
+        .dropdown-item-logout {
+            display: block;
+            padding: 10px 15px;
+            color: #dc2626;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .dropdown-item-logout:hover {
+            background-color: #fee2e2;
+        }
+
         .main-content {
             flex-grow: 1;
             padding: 30px;
@@ -70,8 +140,8 @@
 
 <!-- BARRA LATERAL FIXA -->
 <div class="sidebar">
-    <div>
-        <div class="sidebar-brand">Restaurante App</div>
+    <div class="sidebar-top">
+        <div class="sidebar-brand">Le Chum Bakeette</div>
         <div class="sidebar-menu">
             <a th:href="@{/dashboard}" class="sidebar-item" th:classappend="${menuAtivo == 'dashboard'} ? 'active'">Dashboard</a>
             <a th:href="@{/reservas}" class="sidebar-item" th:classappend="${menuAtivo == 'reservas'} ? 'active'">Reservas</a>
@@ -79,7 +149,24 @@
             <a th:href="@{/pedidos/cozinha}" class="sidebar-item" th:classappend="${menuAtivo == 'pedidos'} ? 'active'">Pedidos</a>
             <a th:href="@{/menu}" class="sidebar-item" th:classappend="${menuAtivo == 'menu'} ? 'active'">Menu</a>
             <a th:href="@{/pedidos/pagamentos}" class="sidebar-item" th:classappend="${menuAtivo == 'pagamentos'} ? 'active'">Pagamentos</a>
-            <a th:href="@{/administracao}" class="sidebar-item" th:classappend="${menuAtivo == 'administracao'} ? 'active'">Administração</a>
+            <a th:href="@{/utilizadores}" class="sidebar-item" th:classappend="${menuAtivo == 'utilizadores'} ? 'active'">Utilizadores</a>
+        </div>
+    </div>
+
+    <!-- CAIXA DO UTILIZADOR ATIVO (Mais acima, perfeitamente visível) -->
+    <div class="sidebar-footer" th:if="${session.utilizadorLogado != null}">
+        <div class="user-dropdown-container" onclick="toggleUserMenu()">
+            <div class="user-avatar" th:text="${#strings.substring(session.utilizadorLogado.nomeCompleto, 0, 1)}">A</div>
+            <div class="user-info">
+                <span class="user-name" th:text="${session.utilizadorLogado.nomeCompleto}">Nome</span>
+                <span class="user-role" th:text="${session.utilizadorLogado.funcao}">Função</span>
+            </div>
+            <span class="user-arrow">▼</span>
+        </div>
+
+        <!-- Menu suspenso de Logoff -->
+        <div id="userMenuDropdown" class="user-menu-dropdown" style="display: none;">
+            <a th:href="@{/logout}" class="dropdown-item-logout">Terminar Sessão</a>
         </div>
     </div>
 </div>
@@ -88,6 +175,21 @@
 <div class="main-content">
     <div th:replace="~{__${conteudo}__}"></div>
 </div>
+
+<!-- Script para abrir/fechar o menu -->
+<script>
+    function toggleUserMenu() {
+        const menu = document.getElementById('userMenuDropdown');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.closest('.user-dropdown-container')) {
+            const menu = document.getElementById('userMenuDropdown');
+            if (menu) menu.style.display = 'none';
+        }
+    }
+</script>
 
 </body>
 </html>
